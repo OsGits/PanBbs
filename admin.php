@@ -56,7 +56,7 @@ adminHandleActions($ossFile, $adminAccounts);
 // ========== 读取公共数据 ==========
 $localVersion  = PANBBS_LOCAL_VERSION;
 $remoteVersion = PANBBS_REMOTE_VERSION;
-$remoteZipUrl  = PANBBS_REMOTE_ZIP_URL;
+$remoteZipUrl  = defined('PANBBS_REMOTE_ZIP_URL') ? PANBBS_REMOTE_ZIP_URL : null;
 $currentUser   = $_SESSION['admin_username'];
 
 // ========== 页面路由分发 ==========

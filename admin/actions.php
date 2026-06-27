@@ -420,16 +420,10 @@ function adminHandleOnlineUpdate() {
     $tmpZip  = $rootDir . '/data/update_tmp.zip';
     $tmpDir  = $rootDir . '/data/update_tmp';
 
-    // 1. 下载 zip
-    $zipData = @file_get_contents($remoteZipUrl, false, stream_context_create([
-        'http' => [
-            'timeout'    => 120,
-            'user_agent' => 'PanBbs/1.0',
-            'follow_location' => 1,
-        ],
-    ]));
+    // 1. 下载 zip（优先用 curl，因为它能正确处理重定向和 HTTPS）
+    $zipData = false;
 
-    if ($zipData === false && function_exists('curl_init')) {
+    if (function_exists('curl_init')) {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $remoteZipUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -438,7 +432,28 @@ function adminHandleOnlineUpdate() {
         curl_setopt($ch, CURLOPT_USERAGENT, 'PanBbs/1.0');
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         $zipData = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
+
+        if ($httpCode !== 200 || $zipData === false) {
+            $zipData = false;
+        }
+    }
+
+    if ($zipData === false) {
+        // fallback: file_get_contents
+        $zipData = @file_get_contents($remoteZipUrl, false, stream_context_create([
+            'http' => [
+                'timeout'    => 120,
+                'user_agent' => 'PanBbs/1.0',
+                'follow_location' => 1,
+                'max_redirects'    => 5,
+            ],
+            'ssl' => [
+                'verify_peer'      => false,
+                'verify_peer_name' => false,
+            ],
+        ]));
     }
 
     if ($zipData === false) {
