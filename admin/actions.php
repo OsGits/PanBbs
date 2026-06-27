@@ -19,6 +19,8 @@ function adminHandleActions($ossFile, $accounts) {
         return;
     }
 
+    // 清除之前可能产生的任何输出（如 PHP warning），确保 JSON 纯净
+    ob_clean();
     header('Content-Type: application/json; charset=utf-8');
 
     switch ($_POST['action']) {
@@ -400,122 +402,133 @@ function adminHandleSaveApi() {
  * 处理在线更新：下载远程 zip、解压覆盖、更新本地版本号
  */
 function adminHandleOnlineUpdate() {
-    set_time_limit(300);
-
-    $remoteVersion = PANBBS_REMOTE_VERSION;
-    $remoteZipUrl  = PANBBS_REMOTE_ZIP_URL;
-
-    if (!$remoteVersion || !$remoteZipUrl) {
-        echo json_encode(['code' => -1, 'msg' => '无法获取远程版本信息，请稍后重试'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-
-    $localVersion = PANBBS_LOCAL_VERSION;
-    if ($remoteVersion === $localVersion) {
-        echo json_encode(['code' => -1, 'msg' => '已是最新版本，无需更新'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-
-    $rootDir = dirname(__DIR__);
-    $tmpZip  = $rootDir . '/data/update_tmp.zip';
-    $tmpDir  = $rootDir . '/data/update_tmp';
-
-    // 1. 下载 zip（优先用 curl，因为它能正确处理重定向和 HTTPS）
-    $zipData = false;
-
-    if (function_exists('curl_init')) {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $remoteZipUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 120);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'PanBbs/1.0');
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        $zipData = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($httpCode !== 200 || $zipData === false) {
-            $zipData = false;
+    try {
+        // 检查 ZipArchive
+        if (!class_exists('ZipArchive')) {
+            echo json_encode(['code' => -1, 'msg' => '服务器未安装 php-zip 扩展，无法解压更新包，请使用离线更新'], JSON_UNESCAPED_UNICODE);
+            exit;
         }
-    }
 
-    if ($zipData === false) {
-        // fallback: file_get_contents
-        $zipData = @file_get_contents($remoteZipUrl, false, stream_context_create([
-            'http' => [
-                'timeout'    => 120,
-                'user_agent' => 'PanBbs/1.0',
-                'follow_location' => 1,
-                'max_redirects'    => 5,
-            ],
-            'ssl' => [
-                'verify_peer'      => false,
-                'verify_peer_name' => false,
-            ],
-        ]));
-    }
+        set_time_limit(300);
 
-    if ($zipData === false) {
-        echo json_encode(['code' => -1, 'msg' => '下载更新包失败，请检查网络或使用离线更新'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
+        $remoteVersion = PANBBS_REMOTE_VERSION;
+        $remoteZipUrl  = PANBBS_REMOTE_ZIP_URL;
 
-    if (file_put_contents($tmpZip, $zipData, LOCK_EX) === false) {
-        echo json_encode(['code' => -1, 'msg' => '写入临时文件失败，请检查 data/ 目录权限'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
+        if (!$remoteVersion || !$remoteZipUrl) {
+            echo json_encode(['code' => -1, 'msg' => '无法获取远程版本信息，请稍后重试'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
 
-    // 2. 解压
-    $zip = new ZipArchive();
-    if ($zip->open($tmpZip) !== true) {
-        unlink($tmpZip);
-        echo json_encode(['code' => -1, 'msg' => '无法打开更新包，文件可能已损坏'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
+        $localVersion = PANBBS_LOCAL_VERSION;
+        if ($remoteVersion === $localVersion) {
+            echo json_encode(['code' => -1, 'msg' => '已是最新版本，无需更新'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
 
-    // 清理旧的临时目录
-    deleteDir($tmpDir);
-    @mkdir($tmpDir, 0755, true);
+        $rootDir = dirname(__DIR__);
+        $tmpZip  = $rootDir . '/data/update_tmp.zip';
+        $tmpDir  = $rootDir . '/data/update_tmp';
 
-    if (!$zip->extractTo($tmpDir)) {
+        // 1. 下载 zip（优先用 curl，因为它能正确处理重定向和 HTTPS）
+        $zipData = false;
+
+        if (function_exists('curl_init')) {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $remoteZipUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'PanBbs/1.0');
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $zipData = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode !== 200 || $zipData === false) {
+                $zipData = false;
+            }
+        }
+
+        if ($zipData === false) {
+            // fallback: file_get_contents
+            $zipData = @file_get_contents($remoteZipUrl, false, stream_context_create([
+                'http' => [
+                    'timeout'    => 120,
+                    'user_agent' => 'PanBbs/1.0',
+                    'follow_location' => 1,
+                    'max_redirects'    => 5,
+                ],
+                'ssl' => [
+                    'verify_peer'      => false,
+                    'verify_peer_name' => false,
+                ],
+            ]));
+        }
+
+        if ($zipData === false) {
+            echo json_encode(['code' => -1, 'msg' => '下载更新包失败，请检查网络或使用离线更新'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        if (file_put_contents($tmpZip, $zipData, LOCK_EX) === false) {
+            echo json_encode(['code' => -1, 'msg' => '写入临时文件失败，请检查 data/ 目录权限'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        // 2. 解压
+        $zip = new ZipArchive();
+        if ($zip->open($tmpZip) !== true) {
+            @unlink($tmpZip);
+            echo json_encode(['code' => -1, 'msg' => '无法打开更新包，文件可能已损坏'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        // 清理旧的临时目录
+        deleteDir($tmpDir);
+        @mkdir($tmpDir, 0755, true);
+
+        if (!$zip->extractTo($tmpDir)) {
+            $zip->close();
+            @unlink($tmpZip);
+            deleteDir($tmpDir);
+            echo json_encode(['code' => -1, 'msg' => '解压失败'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         $zip->close();
-        unlink($tmpZip);
+        @unlink($tmpZip);
+
+        // GitHub zipball 解压后有一个顶层目录 OsGits-PanBbs-xxxxx
+        $innerDirs = glob($tmpDir . '/*', GLOB_ONLYDIR);
+        if (empty($innerDirs)) {
+            deleteDir($tmpDir);
+            echo json_encode(['code' => -1, 'msg' => '更新包结构异常，未找到内容目录'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        $srcDir = $innerDirs[0];
+
+        // 3. 覆盖文件（排除 .vscode、data/ 等本地配置目录）
+        $exclude = ['.vscode', '.git', 'data', 'log'];
+        $copiedCount = copyDir($srcDir, $rootDir, $exclude);
+
+        // 4. 更新 version.php 中的本地版本号
+        $versionFile = $rootDir . '/version.php';
+        $content = file_get_contents($versionFile);
+        $pattern = "/define\('PANBBS_LOCAL_VERSION',\s*'[^']*'\);/";
+        $replacement = "define('PANBBS_LOCAL_VERSION', '{$remoteVersion}');";
+        $newContent = preg_replace($pattern, $replacement, $content);
+
+        if ($newContent !== null && $newContent !== $content) {
+            file_put_contents($versionFile, $newContent, LOCK_EX);
+        }
+
+        // 清理临时目录
         deleteDir($tmpDir);
-        echo json_encode(['code' => -1, 'msg' => '解压失败'], JSON_UNESCAPED_UNICODE);
-        exit;
+
+        echo json_encode(['code' => 0, 'msg' => "在线更新成功！已更新至 {$remoteVersion}，共覆盖 {$copiedCount} 个文件，请刷新页面。"], JSON_UNESCAPED_UNICODE);
+
+    } catch (\Throwable $e) {
+        echo json_encode(['code' => -1, 'msg' => '更新异常: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
     }
-    $zip->close();
-    unlink($tmpZip);
-
-    // GitHub zipball 解压后有一个顶层目录 OsGits-PanBbs-xxxxx
-    $innerDirs = glob($tmpDir . '/*', GLOB_ONLYDIR);
-    if (empty($innerDirs)) {
-        deleteDir($tmpDir);
-        echo json_encode(['code' => -1, 'msg' => '更新包结构异常，未找到内容目录'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-    $srcDir = $innerDirs[0];
-
-    // 3. 覆盖文件（排除 .vscode、data/ 等本地配置目录）
-    $exclude = ['.vscode', '.git', 'data', 'log'];
-    $copiedCount = copyDir($srcDir, $rootDir, $exclude);
-
-    // 4. 更新 version.php 中的本地版本号
-    $versionFile = $rootDir . '/version.php';
-    $content = file_get_contents($versionFile);
-    $pattern = "/define\('PANBBS_LOCAL_VERSION',\s*'[^']*'\);/";
-    $replacement = "define('PANBBS_LOCAL_VERSION', '{$remoteVersion}');";
-    $newContent = preg_replace($pattern, $replacement, $content);
-
-    if ($newContent !== null && $newContent !== $content) {
-        file_put_contents($versionFile, $newContent, LOCK_EX);
-    }
-
-    // 清理临时目录
-    deleteDir($tmpDir);
-
-    echo json_encode(['code' => 0, 'msg' => "在线更新成功！已更新至 {$remoteVersion}，共覆盖 {$copiedCount} 个文件，请刷新页面。"], JSON_UNESCAPED_UNICODE);
 }
 
 /**

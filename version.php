@@ -20,14 +20,16 @@ $ctx = stream_context_create([
 ]);
 $data = @file_get_contents($url, false, $ctx);
 if ($data === false && function_exists('curl_init')) {
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'PanBbs/1.0');
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    $data = curl_exec($ch);
-    curl_close($ch);
+    $ch = @curl_init();
+    if ($ch) {
+        @curl_setopt($ch, CURLOPT_URL, $url);
+        @curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        @curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        @curl_setopt($ch, CURLOPT_USERAGENT, 'PanBbs/1.0');
+        @curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $data = @curl_exec($ch);
+        @curl_close($ch);
+    }
 }
 
 if ($data !== false) {

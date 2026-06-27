@@ -11,6 +11,7 @@
  */
 
 // ========== 基础初始化 ==========
+ob_start();
 session_start();
 define('ADMIN_ACCESS', true);
 
