@@ -23,15 +23,28 @@ usort($allList, function($a, $b) {
 $keyword = isset($_GET['kw']) ? trim($_GET['kw']) : '';
 
 $basePath = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/template';
-$assetVer = require __DIR__ . '/../version.php';
-$localVersion = defined('PANBBS_LOCAL_VERSION') ? PANBBS_LOCAL_VERSION : 'unknown';
+if (!defined('PANBBS_LOCAL_VERSION')) {
+    $assetVer = require __DIR__ . '/../version.php';
+} else {
+    $assetVer = PANBBS_LOCAL_VERSION;
+}
+$localVersion = PANBBS_LOCAL_VERSION;
+
+// 读取 SEO 配置（前端页面也需要访问）
+define('SEO_ACCESS', true);
+$seoConfig = require __DIR__ . '/../data/data.php';
+$seoTitle       = isset($seoConfig['seo']['title']) ? $seoConfig['seo']['title'] : '网盘资源聚合';
+$seoKeywords    = isset($seoConfig['seo']['keywords']) ? $seoConfig['seo']['keywords'] : '';
+$seoDescription = isset($seoConfig['seo']['description']) ? $seoConfig['seo']['description'] : '';
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>网盘资源聚合</title>
+    <title><?= htmlspecialchars($seoTitle) ?></title>
+    <meta name="keywords" content="<?= htmlspecialchars($seoKeywords) ?>">
+    <meta name="description" content="<?= htmlspecialchars($seoDescription) ?>">
     <link rel="stylesheet" href="<?= $basePath ?>/style.css?<?= $assetVer ?>">
 </head>
 <body>

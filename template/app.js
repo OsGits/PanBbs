@@ -283,19 +283,6 @@
 
     var versionFetched = false;
 
-    // 从文本中提取版本号
-    function extractVersion(text) {
-        var match = text.match(/PANBBS_LOCAL_VERSION\s*,\s*'([^']+)'/);
-        if (match) return match[1];
-        // GitHub API 返回的 tag_name
-        match = text.match(/"tag_name"\s*:\s*"(v[\d.]+)"/);
-        if (match) return match[1];
-        // Releases 页面中的 tag 链接
-        match = text.match(/\/releases\/tag\/(v[\d.]+)/i);
-        if (match) return match[1];
-        return null;
-    }
-
     function showLatestVersion(ver) {
         if (latestVersionEl) {
             latestVersionEl.textContent = ver;
@@ -314,50 +301,23 @@
         }
     }
 
-    // 通用 fetch + 解析版本
-    function tryFetchVersion(url, parseJson) {
-        return fetch(url, { cache: 'no-store' }).then(function (res) {
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            return parseJson ? res.json() : res.text();
-        }).then(function (data) {
-            if (parseJson) {
-                // GitHub API: 从 JSON 取 tag_name
-                return data && data.tag_name ? data.tag_name : null;
-            }
-            return extractVersion(data);
-        });
-    }
-
     function fetchLatestVersion() {
         if (versionFetched) return;
         versionFetched = true;
 
-        // 多级回退策略，依次尝试直到成功
-        var urls = [
-            // 策略1: GitHub API
-            { url: 'https://api.github.com/repos/OsGits/PanBbs/releases/latest', json: true },
-            // 策略2: GitHub Releases 页面
-            { url: 'https://github.com/OsGits/PanBbs/releases', json: false },
-        ];
-
-        var idx = 0;
-        function tryNext() {
-            if (idx >= urls.length) {
+        // 从后端 ?a=version 接口获取远程版本（由 version.php 统一管理）
+        fetch('?a=version', { cache: 'no-store' }).then(function (res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+        }).then(function (data) {
+            if (data && data.code === 0 && data.data && data.data.remote) {
+                showLatestVersion(data.data.remote);
+            } else {
                 showVersionFail();
-                return;
             }
-            var item = urls[idx++];
-            tryFetchVersion(item.url, item.json).then(function (ver) {
-                if (ver) {
-                    showLatestVersion(ver);
-                } else {
-                    tryNext();
-                }
-            }).catch(function () {
-                tryNext();
-            });
-        }
-        tryNext();
+        }).catch(function () {
+            showVersionFail();
+        });
     }
 
     // 当前搜索关键词

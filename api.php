@@ -225,7 +225,7 @@ function saveJsonFile($filePath, $newRecords, $existingRecords, $maxRecords) {
  * @param int    $maxRecords  每种类型最大记录数
  * @return array 执行结果
  */
-function fetchAndStore($remoteApi, $dataDir, $targetTypes, $maxRecords) {
+function fetchAndStore($remoteApi, $dataDir, $targetTypes, $maxRecords, $overwrite = false) {
     // 确保数据目录存在
     if (!is_dir($dataDir)) {
         mkdir($dataDir, 0777, true);
@@ -261,18 +261,22 @@ function fetchAndStore($remoteApi, $dataDir, $targetTypes, $maxRecords) {
         }
     }
 
-    // 加载已有的 oss.json
+    // 加载已有的 oss.json（覆盖模式下不加载旧数据）
     $ossFile = $dataDir . '/oss.json';
-    $existingOss = loadJsonFile($ossFile);
-    if (!is_array($existingOss)) {
+    if ($overwrite) {
         $existingOss = [];
+    } else {
+        $existingOss = loadJsonFile($ossFile);
+        if (!is_array($existingOss)) {
+            $existingOss = [];
+        }
     }
 
     $saveResult = [];
 
     // 对每个type做去重合并
     foreach ($targetTypes as $type) {
-        $newRecords     = $classified[$type];
+        $newRecords      = $classified[$type];
         $existingRecords = isset($existingOss[$type]) ? $existingOss[$type] : [];
 
         $saveResult[$type] = [
@@ -280,33 +284,52 @@ function fetchAndStore($remoteApi, $dataDir, $targetTypes, $maxRecords) {
             'before_count' => count($existingRecords),
         ];
 
-        // 仅按url去重
-        $existingUrls = [];
-        foreach ($existingRecords as $record) {
-            if (!empty($record['url'])) {
-                $existingUrls[$record['url']] = true;
+        if ($overwrite) {
+            // 覆盖模式：新数据内部去重后直接截断
+            $seenUrls = [];
+            $uniqueNew = [];
+            foreach ($newRecords as $record) {
+                $url = isset($record['url']) ? $record['url'] : '';
+                if ($url === '' || isset($seenUrls[$url])) {
+                    continue;
+                }
+                $uniqueNew[] = $record;
+                $seenUrls[$url] = true;
             }
-        }
-
-        $uniqueNew = [];
-        foreach ($newRecords as $record) {
-            $url = isset($record['url']) ? $record['url'] : '';
-            if ($url === '' || isset($existingUrls[$url])) {
-                continue;
+            if (count($uniqueNew) > $maxRecords) {
+                $uniqueNew = array_slice($uniqueNew, 0, $maxRecords);
             }
-            $uniqueNew[] = $record;
-            $existingUrls[$url] = true;
-        }
+            $existingOss[$type] = $uniqueNew;
+            $saveResult[$type]['write_success'] = true;
+            $saveResult[$type]['after_count']   = count($uniqueNew);
+        } else {
+            // 增量模式：仅按url去重，新数据在前 + 旧数据在后
+            $existingUrls = [];
+            foreach ($existingRecords as $record) {
+                if (!empty($record['url'])) {
+                    $existingUrls[$record['url']] = true;
+                }
+            }
 
-        // 新数据在前 + 旧数据在后，截断到maxRecords
-        $merged = array_merge($uniqueNew, $existingRecords);
-        if (count($merged) > $maxRecords) {
-            $merged = array_slice($merged, 0, $maxRecords);
-        }
+            $uniqueNew = [];
+            foreach ($newRecords as $record) {
+                $url = isset($record['url']) ? $record['url'] : '';
+                if ($url === '' || isset($existingUrls[$url])) {
+                    continue;
+                }
+                $uniqueNew[] = $record;
+                $existingUrls[$url] = true;
+            }
 
-        $existingOss[$type] = $merged;
-        $saveResult[$type]['write_success'] = true;
-        $saveResult[$type]['after_count']  = count($merged);
+            $merged = array_merge($uniqueNew, $existingRecords);
+            if (count($merged) > $maxRecords) {
+                $merged = array_slice($merged, 0, $maxRecords);
+            }
+
+            $existingOss[$type] = $merged;
+            $saveResult[$type]['write_success'] = true;
+            $saveResult[$type]['after_count']  = count($merged);
+        }
     }
 
     // 写入 oss.json
@@ -317,9 +340,10 @@ function fetchAndStore($remoteApi, $dataDir, $targetTypes, $maxRecords) {
     }
 
     return [
-        'code' => 0,
-        'msg'  => 'success',
-        'data' => [
+        'code'    => 0,
+        'msg'     => 'success',
+        'overwrite' => $overwrite,
+        'data'    => [
             'total_fetched'   => count($allItems),
             'other_types'     => $otherCount,
             'classify_result' => $saveResult,

@@ -15,8 +15,16 @@ require_once __DIR__ . '/api.php';
 // ========== 配置 ==========
 $remoteApi   = 'http://127.0.0.1:8010/api/search?kw=&conc=30&res=all';
 $dataDir     = __DIR__ . '/data';
-$targetTypes = ['115', 'guangya', 'quark'];
-$maxRecords  = 100;
+// 从配置文件读取缓存网盘类型和最大记录数
+define('SEO_ACCESS', true);
+$config      = require __DIR__ . '/data/data.php';
+$cachePans   = isset($config['cache_pans']) ? $config['cache_pans'] : '115,guangya,quark';
+$targetTypes = array_filter(array_map('trim', explode(',', $cachePans)));
+if (empty($targetTypes)) {
+    $targetTypes = ['115', 'guangya', 'quark'];
+}
+$maxRecords  = isset($config['max_records']) ? (int)$config['max_records'] : 100;
+if ($maxRecords < 1) $maxRecords = 100;
 
 // ========== 调试模式 ==========
 $debug = isset($_GET['debug']) && $_GET['debug'] == '1';
@@ -69,7 +77,7 @@ if ($debug) {
     exit;
 }
 
-// ========== 执行 ==========
-$result = fetchAndStore($remoteApi, $dataDir, $targetTypes, $maxRecords);
+// ========== 执行（覆盖模式：完全替换旧数据） ==========
+$result = fetchAndStore($remoteApi, $dataDir, $targetTypes, $maxRecords, true);
 
 echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);

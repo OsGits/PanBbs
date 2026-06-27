@@ -1,0 +1,10 @@
+# 拒绝直接访问 data 目录下的 PHP 文件
+# 保护 data/data.php 等敏感配置文件不被直接读取
+
+<FilesMatch "\.(php|phar|phtml|php5|php7)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# 禁止列出目录
+Options -Indexes

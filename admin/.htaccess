@@ -1,0 +1,9 @@
+# 禁止直接访问 admin 目录下的 PHP 模块文件
+# 所有模块只能通过 admin.php 引用加载
+
+<FilesMatch "\.(php|phar|phtml|php5|php7)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+Options -Indexes

@@ -36,15 +36,25 @@ PanSo（后端 API）  ←   PanBbs（扩展前端）
 
 ```
 PanBbs/
-├── index.php              # 路由入口（home / api / search）
+├── index.php              # 路由入口（home / api / search / version）
 ├── api.php                # 工具函数库（数据获取、解析、展平、存储）
 ├── ting.php               # 数据抓取触发脚本（拉取远程数据 → 存入 oss.json）
-├── version.php            # 静态资源版本号（刷新浏览器缓存）
+├── version.php            # 本地版本号定义
 ├── data/
 │   └── index.php          # 目录占位（oss.json 由 ting.php 自动生成）
-└── template/
-    ├── home.php           # 前端模板页面（HTML 结构 + 数据注入）
-    ├── app.js             # 前端交互脚本（滚动加载、搜索、密码复制等）
+├── log/                   # 更新日志
+│   └── V0.0.5.md          # 版本更新记录
+└── template/              # 前端模板（模块化拆分）
+    ├── home.php           # 模块中枢（require 各子模块）
+    ├── _head.php          # HTML头部 + 数据准备
+    ├── _header.php        # 顶部导航栏
+    ├── _toolbar.php       # 工具栏 + 骨架屏 + 加载指示器
+    ├── _content.php       # 卡片容器 + 空状态
+    ├── _fab.php           # 右下角浮动按钮组（搜索 / 版本信息）
+    ├── _modal_search.php  # 搜索弹窗（含网盘类型复选框筛选）
+    ├── _modal_version.php # 版本信息弹窗
+    ├── _footer.php        # 页脚 + 全局加载遮罩 + JS 注入
+    ├── app.js             # 前端交互脚本（滚动加载、搜索、版本检测、网盘筛选等）
     └── style.css          # 样式表（现代简约风格 + 毛玻璃效果）
 ```
 

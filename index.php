@@ -9,8 +9,9 @@
  *   /?a=search&kw=xxx      → 搜索接口，直接拉取远程API数据并返回（不存储）
  */
 
-// 引入工具函数库
+// 引入工具函数库 & 版本信息
 require_once __DIR__ . '/api.php';
+require_once __DIR__ . '/version.php';
 
 // 获取请求参数
 $action = isset($_GET['a']) ? $_GET['a'] : 'home';
@@ -108,15 +109,17 @@ switch ($action) {
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         break;
 
-    // 版本接口：仅返回本地版本（最新版本由前端浏览器直接从 GitHub raw 获取）
+    // 版本接口：返回本地版本和远程版本
     case 'version':
         header('Content-Type: application/json; charset=utf-8');
-        $localVer = defined('PANBBS_LOCAL_VERSION') ? PANBBS_LOCAL_VERSION : 'unknown';
+        $localVer  = PANBBS_LOCAL_VERSION;
+        $remoteVer = PANBBS_REMOTE_VERSION;
         echo json_encode([
             'code' => 0,
             'msg'  => 'success',
             'data' => [
-                'local' => $localVer,
+                'local'  => $localVer,
+                'remote' => $remoteVer,
             ],
         ], JSON_UNESCAPED_UNICODE);
         break;
