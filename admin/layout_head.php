@@ -424,6 +424,10 @@ function adminHead($title = '管理面板') {
             max-width: 100%;
             overflow-x: auto;
         }
+        .readme-panel h3 {
+            display: flex;
+            align-items: center;
+        }
         .readme-body {
             font-size: 14px;
             line-height: 1.8;

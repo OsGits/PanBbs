@@ -183,6 +183,7 @@ function simpleMarkdownToHtml($md) {
     return $out;
 }
 
+// ========== 获取远程 README 内容（实时拉取） ==========
 $readmeHtml = null;
 $readmeContent = fetchRemoteReadme();
 if ($readmeContent !== null) {

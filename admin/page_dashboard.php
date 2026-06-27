@@ -49,7 +49,7 @@ function adminShowDashboard($dataStats, $totalRecords, $localVersion, $remoteVer
                     </div>
                 </div>
 
-                <!-- README 内容 -->
+                <!-- README 内容（实时拉取） -->
                 <?php if ($readmeHtml !== null): ?>
                 <div class="panel readme-panel">
                     <h3>📄 项目说明（README.md）</h3>
