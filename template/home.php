@@ -22,4 +22,5 @@ require __DIR__ . '/_content.php';
 require __DIR__ . '/_fab.php';
 require __DIR__ . '/_modal_version.php';
 require __DIR__ . '/_modal_search.php';
+require __DIR__ . '/_modal_detail.php';
 require __DIR__ . '/_footer.php';

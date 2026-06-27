@@ -16,7 +16,8 @@
 
     var cardList, emptyBox, emptyMsg, loadStatus, skeletonBox, backToTop;
     var fabSearch, fabCopyright, searchOverlay, modalSearchInput, modalSearchBtn, searchModalClose, globalLoading;
-    var copyrightOverlay, copyrightModalClose, localVersionEl, latestVersionEl, updateHint;
+    var copyrightOverlay, copyrightModalClose, localVersionEl, latestVersionEl, updateHint, connectorStatus;
+    var detailOverlay, detailModalClose, detailIcon, detailTitle, detailType, detailContent, detailMeta, detailActions;
     var searchPlaceholder, searchClearBtn;
     var searchTypeCheckboxes, searchTypeToggle;
 
@@ -63,7 +64,7 @@
                 '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> ' +
                 '密码：<strong>' + esc(item.password) + '</strong></span>';
         }
-        return '<div class="card type-' + escAttr(type) + '">' +
+        return '<div class="card type-' + escAttr(type) + '" data-idx="' + (allItems.indexOf(item)) + '">' +
             '<div class="card-header">' +
                 '<div class="card-icon type-' + escAttr(type) + '">' + icon + '</div>' +
                 '<div class="card-title">' + esc(item.title) + '</div>' +
@@ -74,9 +75,9 @@
                 tags +
             '</div>' +
             '<div class="card-actions">' +
-                '<a href="' + escAttr(item.url) + '" target="_blank" rel="nofollow noopener" class="link-btn">' +
+                '<button class="link-btn detail-trigger">' +
                     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> ' +
-                    '打开链接</a>' +
+                    '查看详情</button>' +
                 pwdBlock +
                 '<span class="card-time">' + esc(item.add_time || '') + '</span>' +
             '</div>' +
@@ -121,6 +122,7 @@
 
         rendered += batch.length;
         bindPwdClick();
+        bindDetailTrigger();
 
         // 检查是否还有剩余
         if (rendered >= allItems.length) {
@@ -281,6 +283,107 @@
         }
     }
 
+    // ============ 详情弹窗 ============
+    function openDetailModal(item) {
+        if (!detailOverlay) return;
+        var type = String(item.type || '');
+        var icon = type === 'quark' ? 'Q' : (type === 'guangya' ? 'G' : '1');
+
+        // 图标
+        if (detailIcon) {
+            detailIcon.textContent = icon;
+            detailIcon.className = 'detail-icon type-' + escAttr(type);
+        }
+        // 标题
+        if (detailTitle) {
+            detailTitle.textContent = item.title || '无标题';
+        }
+        // 类型
+        if (detailType) {
+            detailType.textContent = item.type || '-';
+            detailType.className = 'detail-type type-' + escAttr(type);
+        }
+        // 正文
+        if (detailContent) {
+            detailContent.textContent = item.content || '';
+            detailContent.style.display = item.content ? '' : 'none';
+        }
+        // 标签
+        if (detailMeta) {
+            var tagsHtml = '';
+            if (item.tags) {
+                var arr = String(item.tags).split(',');
+                for (var i = 0; i < arr.length; i++) {
+                    var t = arr[i].trim();
+                    if (t) tagsHtml += '<span class="tag">#' + esc(t) + '</span>';
+                }
+            }
+            detailMeta.innerHTML = tagsHtml;
+        }
+        // 操作区
+        if (detailActions) {
+            var html = '';
+            html += '<button class="detail-link-btn detail-copy-url" data-url="' + escAttr(item.url) + '">' +
+                '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
+                '复制源链接</button>';
+            if (item.password) {
+                html += '<div class="detail-pwd" data-pwd="' + escAttr(item.password) + '">' +
+                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' +
+                    '密码：<strong>' + esc(item.password) + '</strong>（点击复制）</div>';
+            }
+            if (item.add_time) {
+                html += '<div class="detail-time">添加时间：' + esc(item.add_time) + '</div>';
+            }
+            detailActions.innerHTML = html;
+
+            // 绑定源链接复制
+            var copyUrlEl = detailActions.querySelector('.detail-copy-url');
+            if (copyUrlEl) {
+                copyUrlEl.addEventListener('click', function () {
+                    var url = this.getAttribute('data-url');
+                    if (!url) return;
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(url).then(function () {
+                            showToast('引擎提示：链接已复制！');
+                        }).catch(function () {
+                            fallbackCopy(url, '引擎提示：链接已复制！');
+                        });
+                    } else {
+                        fallbackCopy(url, '引擎提示：链接已复制！');
+                    }
+                });
+            }
+
+            // 绑定密码点击
+            var pwdEl = detailActions.querySelector('.detail-pwd');
+            if (pwdEl) {
+                pwdEl.addEventListener('click', function () {
+                    var pwd = this.getAttribute('data-pwd');
+                    if (!pwd) return;
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(pwd).then(function () {
+                            showToast('密码已复制: ' + pwd);
+                        }).catch(function () {
+                            fallbackCopy(pwd);
+                        });
+                    } else {
+                        fallbackCopy(pwd);
+                    }
+                });
+            }
+        }
+
+        detailOverlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDetailModal() {
+        if (detailOverlay) {
+            detailOverlay.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+    }
+
     var versionFetched = false;
 
     function showLatestVersion(ver) {
@@ -289,8 +392,17 @@
             latestVersionEl.style.color = '';
         }
         var local = localVersionEl ? localVersionEl.textContent : '';
-        if (ver && local && ver !== local && updateHint) {
-            updateHint.style.display = '';
+        if (ver && local && ver !== local) {
+            if (updateHint) updateHint.style.display = '';
+            if (connectorStatus) {
+                connectorStatus.classList.add('is-outdated');
+                connectorStatus.classList.remove('is-updated');
+            }
+        } else if (ver && local && ver === local) {
+            if (connectorStatus) {
+                connectorStatus.classList.add('is-updated');
+                connectorStatus.classList.remove('is-outdated');
+            }
         }
     }
 
@@ -298,6 +410,9 @@
         if (latestVersionEl) {
             latestVersionEl.textContent = '获取失败';
             latestVersionEl.style.color = 'var(--text-muted)';
+        }
+        if (connectorStatus) {
+            connectorStatus.classList.remove('is-outdated', 'is-updated');
         }
     }
 
@@ -613,14 +728,31 @@
         }
     }
 
-    function fallbackCopy(text) {
+    // ============ 绑定详情弹窗触发器 ============
+    function bindDetailTrigger() {
+        var triggers = document.querySelectorAll('.detail-trigger');
+        for (var i = 0; i < triggers.length; i++) {
+            var el = triggers[i];
+            if (el._detailBound) continue;
+            el._detailBound = true;
+            el.addEventListener('click', function () {
+                var card = this.closest('.card');
+                if (!card) return;
+                var idx = parseInt(card.getAttribute('data-idx'), 10);
+                if (isNaN(idx) || idx < 0 || idx >= allItems.length) return;
+                openDetailModal(allItems[idx]);
+            });
+        }
+    }
+
+    function fallbackCopy(text, msg) {
         var ta = document.createElement('textarea');
         ta.value = text;
         ta.style.position = 'fixed';
         ta.style.left = '-9999px';
         document.body.appendChild(ta);
         ta.select();
-        try { document.execCommand('copy'); showToast('密码已复制: ' + text); } catch (e) {}
+        try { document.execCommand('copy'); showToast(msg || ('密码已复制: ' + text)); } catch (e) {}
         document.body.removeChild(ta);
     }
 
@@ -648,6 +780,15 @@
         localVersionEl = document.getElementById('localVersion');
         latestVersionEl = document.getElementById('latestVersion');
         updateHint = document.getElementById('updateHint');
+        connectorStatus = document.getElementById('connectorStatus');
+        detailOverlay = document.getElementById('detailOverlay');
+        detailModalClose = document.getElementById('detailModalClose');
+        detailIcon = document.getElementById('detailIcon');
+        detailTitle = document.getElementById('detailTitle');
+        detailType = document.getElementById('detailType');
+        detailContent = document.getElementById('detailContent');
+        detailMeta = document.getElementById('detailMeta');
+        detailActions = document.getElementById('detailActions');
         searchTypeCheckboxes = document.querySelectorAll('#searchTypeFilter input[name="searchType"]');
         searchTypeToggle = document.getElementById('searchTypeToggle');
 
@@ -700,6 +841,13 @@
         if (copyrightModalClose) {
             copyrightModalClose.addEventListener('click', function () {
                 closeCopyrightModal();
+            });
+        }
+
+        // 详情弹窗关闭
+        if (detailModalClose) {
+            detailModalClose.addEventListener('click', function () {
+                closeDetailModal();
             });
         }
 
