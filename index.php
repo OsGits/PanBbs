@@ -97,18 +97,15 @@ switch ($action) {
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         break;
 
-    // 版本接口：获取本地版本和远程最新版本
+    // 版本接口：仅返回本地版本（最新版本由前端浏览器直接从 GitHub raw 获取）
     case 'version':
         header('Content-Type: application/json; charset=utf-8');
         $localVer = defined('PANBBS_LOCAL_VERSION') ? PANBBS_LOCAL_VERSION : 'unknown';
-        $latestVer = getRemoteLatestVersion();
         echo json_encode([
             'code' => 0,
             'msg'  => 'success',
             'data' => [
-                'local'       => $localVer,
-                'latest'      => $latestVer,
-                'has_remote'  => $latestVer !== null,
+                'local' => $localVer,
             ],
         ], JSON_UNESCAPED_UNICODE);
         break;

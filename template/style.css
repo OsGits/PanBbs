@@ -361,42 +361,87 @@ body {
     transition: transform 0.3s;
 }
 
-/* ---- Copyright Modal ---- */
-.copyright-info {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-.copyright-row {
+/* ---- Copyright/Version Modal ---- */
+.version-compare {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    background: rgba(255, 255, 255, 0.5);
-    border-radius: var(--radius-xs);
-    border: 1px solid var(--border);
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 16px;
 }
-.copyright-label {
+.version-item {
+    flex: 1;
+    text-align: center;
+    padding: 16px 12px;
+    border-radius: var(--radius);
+}
+.version-local {
+    background: rgba(108, 92, 231, 0.06);
+}
+.version-remote {
+    background: rgba(240, 147, 43, 0.06);
+}
+.version-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+}
+.version-num {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+}
+.version-local .version-num {
+    color: var(--accent);
+}
+.version-remote .version-num {
+    color: var(--orange);
+}
+.version-divider {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    margin: 0 -4px;
+    z-index: 1;
+}
+.version-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     font-size: 13px;
     font-weight: 600;
-    color: var(--text-secondary);
-    min-width: 72px;
-    flex-shrink: 0;
+    color: var(--orange);
+    margin-bottom: 16px;
 }
-.copyright-value {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--accent);
+.version-dot {
+    width: 7px; height: 7px;
+    background: var(--orange);
+    border-radius: 50%;
+    animation: pulse 1.2s infinite alternate;
 }
-.copyright-link {
-    font-size: 14px;
-    font-weight: 500;
+.version-desc {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+.version-desc a {
     color: var(--accent);
     text-decoration: none;
-    word-break: break-all;
+    font-weight: 600;
     transition: color 0.2s;
 }
-.copyright-link:hover {
+.version-desc a:hover {
     color: #5b4bd5;
     text-decoration: underline;
 }
