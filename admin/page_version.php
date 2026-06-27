@@ -13,8 +13,9 @@ if (!defined('ADMIN_ACCESS')) {
  * @param string $username       当前登录用户名
  * @param string $localVersion   本地版本号
  * @param string|null $remoteVersion 远程版本号
+ * @param string|null $remoteZipUrl  远程版本压缩包下载地址
  */
-function adminShowVersion($username, $localVersion, $remoteVersion = null) {
+function adminShowVersion($username, $localVersion, $remoteVersion = null, $remoteZipUrl = null) {
     require_once __DIR__ . '/layout_head.php';
     require_once __DIR__ . '/layout_topbar.php';
     require_once __DIR__ . '/layout_sidebar.php';
@@ -42,7 +43,7 @@ function adminShowVersion($username, $localVersion, $remoteVersion = null) {
                     <div class="version-card" style="margin-top:12px;">
                         <div class="ver-info">
                             <span class="ver-tag"><?php echo $remoteVersion ? htmlspecialchars($remoteVersion) : '获取失败'; ?></span>
-                            <span class="ver-date">远程版本（GitHub Releases）</span>
+                            <span class="ver-date">发布版本（<a href="https://github.com/OsGits/PanBbs/releases" target="_blank" style="color:#0f3460;">GitHub Releases</a>）</span>
                         </div>
                         <?php if ($remoteVersion && $remoteVersion !== $localVersion): ?>
                             <span class="ver-badge" style="background:#ff9800;color:#fff;">可更新</span>
@@ -52,6 +53,12 @@ function adminShowVersion($username, $localVersion, $remoteVersion = null) {
                             <span class="ver-badge" style="background:#999;color:#fff;">未知</span>
                         <?php endif; ?>
                     </div>
+                    <?php if ($remoteVersion && $remoteVersion !== $localVersion): ?>
+                    <div style="margin-top:16px; display:flex; gap:12px;">
+                        <button class="btn btn-primary" onclick="onlineUpdate()">在线更新</button>
+                        <a href="<?php echo htmlspecialchars($remoteZipUrl ?: 'https://github.com/OsGits/PanBbs/releases/latest'); ?>" target="_blank" class="btn" style="border-color:#ff9800;color:#ff9800;text-decoration:none;line-height:36px;">离线更新</a>
+                    </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- 更新日志 -->
