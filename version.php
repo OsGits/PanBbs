@@ -5,7 +5,7 @@
  */
 
 // ========== 本地版本 ==========
-define('PANBBS_LOCAL_VERSION', 'V2026.0628.0004');
+define('PANBBS_LOCAL_VERSION', 'V2026.0628.0024');
 
 // ========== 远程版本（从 GitHub Releases 实时获取） ==========
 $remoteVersion = null;
@@ -32,13 +32,16 @@ if ($data === false && function_exists('curl_init')) {
     }
 }
 
+$releaseBody = null;
 if ($data !== false) {
     $json = json_decode($data, true);
     $remoteVersion = isset($json['tag_name']) ? $json['tag_name'] : null;
     $remoteZipUrl  = isset($json['zipball_url']) ? $json['zipball_url'] : null;
+    $releaseBody   = isset($json['body']) ? $json['body'] : null;
 }
 
 define('PANBBS_REMOTE_VERSION', $remoteVersion);
 define('PANBBS_REMOTE_ZIP_URL', $remoteZipUrl);
+define('PANBBS_RELEASE_BODY', $releaseBody);
 
 return PANBBS_LOCAL_VERSION;

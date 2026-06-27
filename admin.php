@@ -58,6 +58,7 @@ adminHandleActions($ossFile, $adminAccounts);
 $localVersion  = PANBBS_LOCAL_VERSION;
 $remoteVersion = PANBBS_REMOTE_VERSION;
 $remoteZipUrl  = defined('PANBBS_REMOTE_ZIP_URL') ? PANBBS_REMOTE_ZIP_URL : null;
+$releaseBody   = defined('PANBBS_RELEASE_BODY') ? PANBBS_RELEASE_BODY : null;
 $currentUser   = $_SESSION['admin_username'];
 
 // ========== 页面路由分发 ==========
@@ -69,7 +70,7 @@ switch ($page) {
         break;
 
     case 'version':
-        adminShowVersion($currentUser, $localVersion, $remoteVersion, $remoteZipUrl);
+        adminShowVersion($currentUser, $localVersion, $remoteVersion, $remoteZipUrl, $releaseBody);
         break;
 
     case 'dashboard':
