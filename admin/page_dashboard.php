@@ -16,8 +16,9 @@ if (!defined('ADMIN_ACCESS')) {
  * @param string      $localVersion  本地版本号
  * @param string|null $remoteVersion 远程最新版本号
  * @param string      $username      当前登录用户名
+ * @param string|null $readmeHtml    远程 README.md 的 HTML 内容
  */
-function adminShowDashboard($dataStats, $totalRecords, $localVersion, $remoteVersion, $username) {
+function adminShowDashboard($dataStats, $totalRecords, $localVersion, $remoteVersion, $username, $readmeHtml = null) {
     require_once __DIR__ . '/layout_head.php';
     require_once __DIR__ . '/layout_topbar.php';
     require_once __DIR__ . '/layout_sidebar.php';
@@ -47,6 +48,21 @@ function adminShowDashboard($dataStats, $totalRecords, $localVersion, $remoteVer
                         <div class="stat-value"><?php echo $remoteVersion ? htmlspecialchars($remoteVersion) : '<span style="font-size:16px;color:#999;">获取中...</span>'; ?></div>
                     </div>
                 </div>
+
+                <!-- README 内容 -->
+                <?php if ($readmeHtml !== null): ?>
+                <div class="panel readme-panel">
+                    <h3>📄 项目说明（README.md）</h3>
+                    <div class="readme-body">
+                        <?php echo $readmeHtml; ?>
+                    </div>
+                </div>
+                <?php else: ?>
+                <div class="panel readme-panel">
+                    <h3>📄 项目说明</h3>
+                    <p style="color:#999; text-align:center; padding:20px;">无法加载远程 README.md，请检查网络连接。</p>
+                </div>
+                <?php endif; ?>
             </div>
         </main>
     </div>

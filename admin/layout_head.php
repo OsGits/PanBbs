@@ -419,6 +419,107 @@ function adminHead($title = '管理面板') {
             border-top-right-radius: 0;
             margin-top: 20px;
         }
+        /* README 内容渲染 */
+        .readme-panel {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        .readme-body {
+            font-size: 14px;
+            line-height: 1.8;
+            color: #444;
+        }
+        .readme-body h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin: 24px 0 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .readme-body h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin: 20px 0 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .readme-body h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin: 16px 0 8px;
+        }
+        .readme-body h4, .readme-body h5, .readme-body h6 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            margin: 12px 0 6px;
+        }
+        .readme-body p {
+            margin: 8px 0;
+        }
+        .readme-body li {
+            margin: 4px 0 4px 20px;
+            list-style: disc;
+        }
+        .readme-body strong {
+            color: #1a1a2e;
+        }
+        .readme-body a {
+            color: #0f3460;
+            text-decoration: none;
+            border-bottom: 1px dashed #0f3460;
+        }
+        .readme-body a:hover {
+            color: #1a4a8a;
+            border-bottom-style: solid;
+        }
+        .readme-body code.inline-code {
+            background: #f0f2f5;
+            color: #e74c3c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+        .readme-body pre {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            padding: 16px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 12px 0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .readme-body pre code {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+        .readme-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 13px;
+        }
+        .readme-body table td {
+            padding: 8px 12px;
+            border: 1px solid #e8e8e8;
+        }
+        .readme-body table tr:nth-child(even) td {
+            background: #f8f9fa;
+        }
+        .readme-body hr {
+            border: none;
+            border-top: 1px solid #eee;
+            margin: 16px 0;
+        }
+        .readme-body br {
+            display: block;
+            content: '';
+            margin: 4px 0;
+        }
         /* 响应式 */
         @media (max-width: 768px) {
             .sidebar {

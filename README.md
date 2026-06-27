@@ -2,6 +2,8 @@
 
 一个轻量级的网盘资源聚合展示系统，从远程 API 拉取数据并分类展示，支持搜索、滚动加载、详情弹窗、密码一键复制等功能。
 
+> 📦 仓库地址：[https://github.com/OsGits/PanBbs](https://github.com/OsGits/PanBbs)
+
 ## 项目来源
 
 本项目是基于开源网盘搜索工具 [PanSo](https://github.com/fish2018/pansou) 的**扩展前端**。
