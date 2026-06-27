@@ -67,7 +67,7 @@ switch ($page) {
         break;
 
     case 'version':
-        adminShowVersion($currentUser, $localVersion);
+        adminShowVersion($currentUser, $localVersion, $remoteVersion);
         break;
 
     case 'dashboard':
