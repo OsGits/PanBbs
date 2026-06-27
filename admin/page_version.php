@@ -28,6 +28,7 @@ function adminShowVersion($username, $localVersion, $remoteVersion = null, $remo
         <?php adminSidebar('version'); ?>
         <main class="main-content">
             <div class="container">
+                <div id="toast" class="toast" style="display:none;"></div>
                 <h2 class="page-title">📦 版本更新</h2>
 
                 <!-- 版本信息 -->
@@ -95,7 +96,52 @@ function adminShowVersion($username, $localVersion, $remoteVersion = null, $remo
             </div>
         </main>
     </div>
+    <script>
+        function showToast(msg, type) {
+            var t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast ' + (type || 'success');
+            t.style.display = 'block';
+            clearTimeout(t._timer);
+            t._timer = setTimeout(function() { t.style.display = 'none'; }, 5000);
+        }
 
+        function postAction(data, callback) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'admin.php', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                try { var res = JSON.parse(xhr.responseText); callback(res); }
+                catch(e) { showToast('服务器响应异常', 'error'); }
+            };
+            xhr.onerror = function() { showToast('网络请求失败', 'error'); };
+            var params = [];
+            for (var key in data) {
+                params.push(encodeURIComponent(key) + '=' + encodeURIComponent(data[key]));
+            }
+            xhr.send(params.join('&'));
+        }
+
+        function onlineUpdate() {
+            if (!confirm('确定要在线更新吗？\n\n此操作将从 GitHub 下载最新版本并覆盖当前文件。')) return;
+
+            var btn = document.querySelector('.btn-primary');
+            btn.disabled = true;
+            btn.textContent = '更新中...';
+            showToast('正在下载更新包，请稍候...', 'info');
+
+            postAction({ action: 'online_update' }, function(res) {
+                btn.disabled = false;
+                btn.textContent = '在线更新';
+                if (res.code === 0) {
+                    showToast(res.msg, 'success');
+                    setTimeout(function() { location.reload(); }, 3000);
+                } else {
+                    showToast(res.msg, 'error');
+                }
+            });
+        }
+    </script>
 
 </body>
 </html>

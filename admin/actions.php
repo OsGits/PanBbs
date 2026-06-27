@@ -70,9 +70,9 @@ function adminHandleActions($ossFile, $accounts) {
             adminHandleChangePassword($accounts);
             exit;
 
-        // 更新版本号
-        case 'update_version':
-            adminHandleUpdateVersion();
+        // 在线更新
+        case 'online_update':
+            adminHandleOnlineUpdate();
             exit;
 
         // 保存 SEO 配置
@@ -394,4 +394,155 @@ function adminHandleSaveApi() {
     } else {
         echo json_encode(['code' => -1, 'msg' => '文件写入失败，请检查 data/ 目录权限'], JSON_UNESCAPED_UNICODE);
     }
+}
+
+/**
+ * 处理在线更新：下载远程 zip、解压覆盖、更新本地版本号
+ */
+function adminHandleOnlineUpdate() {
+    set_time_limit(300);
+
+    $remoteVersion = PANBBS_REMOTE_VERSION;
+    $remoteZipUrl  = PANBBS_REMOTE_ZIP_URL;
+
+    if (!$remoteVersion || !$remoteZipUrl) {
+        echo json_encode(['code' => -1, 'msg' => '无法获取远程版本信息，请稍后重试'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $localVersion = PANBBS_LOCAL_VERSION;
+    if ($remoteVersion === $localVersion) {
+        echo json_encode(['code' => -1, 'msg' => '已是最新版本，无需更新'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $rootDir = dirname(__DIR__);
+    $tmpZip  = $rootDir . '/data/update_tmp.zip';
+    $tmpDir  = $rootDir . '/data/update_tmp';
+
+    // 1. 下载 zip
+    $zipData = @file_get_contents($remoteZipUrl, false, stream_context_create([
+        'http' => [
+            'timeout'    => 120,
+            'user_agent' => 'PanBbs/1.0',
+            'follow_location' => 1,
+        ],
+    ]));
+
+    if ($zipData === false && function_exists('curl_init')) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $remoteZipUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'PanBbs/1.0');
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $zipData = curl_exec($ch);
+        curl_close($ch);
+    }
+
+    if ($zipData === false) {
+        echo json_encode(['code' => -1, 'msg' => '下载更新包失败，请检查网络或使用离线更新'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if (file_put_contents($tmpZip, $zipData, LOCK_EX) === false) {
+        echo json_encode(['code' => -1, 'msg' => '写入临时文件失败，请检查 data/ 目录权限'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // 2. 解压
+    $zip = new ZipArchive();
+    if ($zip->open($tmpZip) !== true) {
+        unlink($tmpZip);
+        echo json_encode(['code' => -1, 'msg' => '无法打开更新包，文件可能已损坏'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // 清理旧的临时目录
+    deleteDir($tmpDir);
+    @mkdir($tmpDir, 0755, true);
+
+    if (!$zip->extractTo($tmpDir)) {
+        $zip->close();
+        unlink($tmpZip);
+        deleteDir($tmpDir);
+        echo json_encode(['code' => -1, 'msg' => '解压失败'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $zip->close();
+    unlink($tmpZip);
+
+    // GitHub zipball 解压后有一个顶层目录 OsGits-PanBbs-xxxxx
+    $innerDirs = glob($tmpDir . '/*', GLOB_ONLYDIR);
+    if (empty($innerDirs)) {
+        deleteDir($tmpDir);
+        echo json_encode(['code' => -1, 'msg' => '更新包结构异常，未找到内容目录'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $srcDir = $innerDirs[0];
+
+    // 3. 覆盖文件（排除 .vscode、data/ 等本地配置目录）
+    $exclude = ['.vscode', '.git', 'data', 'log'];
+    $copiedCount = copyDir($srcDir, $rootDir, $exclude);
+
+    // 4. 更新 version.php 中的本地版本号
+    $versionFile = $rootDir . '/version.php';
+    $content = file_get_contents($versionFile);
+    $pattern = "/define\('PANBBS_LOCAL_VERSION',\s*'[^']*'\);/";
+    $replacement = "define('PANBBS_LOCAL_VERSION', '{$remoteVersion}');";
+    $newContent = preg_replace($pattern, $replacement, $content);
+
+    if ($newContent !== null && $newContent !== $content) {
+        file_put_contents($versionFile, $newContent, LOCK_EX);
+    }
+
+    // 清理临时目录
+    deleteDir($tmpDir);
+
+    echo json_encode(['code' => 0, 'msg' => "在线更新成功！已更新至 {$remoteVersion}，共覆盖 {$copiedCount} 个文件，请刷新页面。"], JSON_UNESCAPED_UNICODE);
+}
+
+/**
+ * 递归删除目录
+ */
+function deleteDir($dir) {
+    if (!is_dir($dir)) return;
+    $items = scandir($dir);
+    foreach ($items as $item) {
+        if ($item === '.' || $item === '..') continue;
+        $path = $dir . '/' . $item;
+        is_dir($path) ? deleteDir($path) : unlink($path);
+    }
+    rmdir($dir);
+}
+
+/**
+ * 递归复制目录（排除指定目录/文件）
+ * @return int 复制的文件数
+ */
+function copyDir($src, $dst, $exclude = []) {
+    $count = 0;
+    if (!is_dir($src)) return $count;
+
+    $items = scandir($src);
+    foreach ($items as $item) {
+        if ($item === '.' || $item === '..') continue;
+        if (in_array($item, $exclude)) continue;
+
+        $srcPath = $src . '/' . $item;
+        $dstPath = $dst . '/' . $item;
+
+        if (is_dir($srcPath)) {
+            if (!is_dir($dstPath)) {
+                @mkdir($dstPath, 0755, true);
+            }
+            $count += copyDir($srcPath, $dstPath, $exclude);
+        } else {
+            if (copy($srcPath, $dstPath)) {
+                $count++;
+            }
+        }
+    }
+    return $count;
 }
