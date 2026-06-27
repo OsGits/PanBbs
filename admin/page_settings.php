@@ -98,24 +98,28 @@ function adminShowSettings($username, $version, $seo, $apiBaseUrl, $searchTypes,
                     <button class="btn btn-primary" onclick="saveCache()">保存缓存设置</button>
                 </div>
 
-                <!-- 修改密码面板 -->
+                <!-- 修改账号密码面板 -->
                 <div class="panel tab-panel" id="tab-password" style="display:none;">
-                    <h3>修改密码</h3>
+                    <h3>修改账号 / 密码</h3>
                     <div class="form-row">
                         <div class="form-field">
-                            <label>原密码</label>
+                            <label>原密码（验证身份）</label>
                             <input type="password" id="oldPwd" placeholder="输入原密码">
                         </div>
                         <div class="form-field">
-                            <label>新密码</label>
-                            <input type="password" id="newPwd" placeholder="至少6位">
+                            <label>新账号</label>
+                            <input type="text" id="newUser" placeholder="留空则不修改账号">
                         </div>
                         <div class="form-field">
-                            <label>确认新密码</label>
-                            <input type="password" id="confirmPwd" placeholder="再次输入新密码">
+                            <label>新密码</label>
+                            <input type="password" id="newPwd" placeholder="留空则不修改密码">
                         </div>
                         <button class="btn btn-primary" onclick="changePassword()" style="height:38px;">确认修改</button>
                     </div>
+                    <p class="hint-text" style="color:#999;font-size:12px;margin-top:16px;line-height:1.8;">
+                        💡 提示：新账号和新密码至少填写一项，也可两项同时修改。<br>
+                        ⚠️ 如果忘记了账号和密码，可以在 <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;">data/data.php</code> 文件中手动修改 <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;">$accounts</code> 数组。
+                    </p>
                 </div>
             </div>
         </main>
@@ -243,23 +247,34 @@ function adminShowSettings($username, $version, $seo, $apiBaseUrl, $searchTypes,
             });
         }
 
-        // ===== 修改密码 =====
+        // ===== 修改账号密码 =====
         function changePassword() {
             var oldPwd = document.getElementById('oldPwd').value.trim();
+            var newUser = document.getElementById('newUser').value.trim();
             var newPwd = document.getElementById('newPwd').value.trim();
-            var confirmPwd = document.getElementById('confirmPwd').value.trim();
-            if (!oldPwd || !newPwd || !confirmPwd) {
-                showToast('请填写所有密码字段', 'error'); return;
+            if (!oldPwd) {
+                showToast('请输入原密码以验证身份', 'error'); return;
+            }
+            if (!newUser && !newPwd) {
+                showToast('新账号和新密码至少填写一项', 'error'); return;
+            }
+            if (newUser && !/^[a-zA-Z0-9_]{2,20}$/.test(newUser)) {
+                showToast('新账号格式错误：2-20位字母、数字或下划线', 'error'); return;
+            }
+            if (newPwd && newPwd.length < 6) {
+                showToast('新密码长度不能少于6位', 'error'); return;
             }
             postAction({
                 action: 'change_password',
-                old_password: oldPwd, new_password: newPwd, confirm_password: confirmPwd
+                old_password: oldPwd,
+                new_username: newUser,
+                new_password: newPwd
             }, function(res) {
                 if (res.code === 0) {
                     showToast(res.msg, 'success');
                     document.getElementById('oldPwd').value = '';
+                    document.getElementById('newUser').value = '';
                     document.getElementById('newPwd').value = '';
-                    document.getElementById('confirmPwd').value = '';
                 } else { showToast(res.msg, 'error'); }
             });
         }

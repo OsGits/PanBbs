@@ -99,48 +99,97 @@ function adminHandleActions($ossFile, $accounts) {
 }
 
 /**
- * 处理密码修改
+ * 处理账号密码修改（支持单独修改密码、单独修改账号、或同时修改）
  */
 function adminHandleChangePassword($accounts) {
-    $oldPwd     = isset($_POST['old_password']) ? trim($_POST['old_password']) : '';
-    $newPwd     = isset($_POST['new_password']) ? trim($_POST['new_password']) : '';
-    $confirmPwd = isset($_POST['confirm_password']) ? trim($_POST['confirm_password']) : '';
+    $oldPwd   = isset($_POST['old_password']) ? trim($_POST['old_password']) : '';
+    $newUser  = isset($_POST['new_username']) ? trim($_POST['new_username']) : '';
+    $newPwd   = isset($_POST['new_password']) ? trim($_POST['new_password']) : '';
 
     $currentUser = $_SESSION['admin_username'];
 
-    if ($oldPwd === '' || $newPwd === '' || $confirmPwd === '') {
-        echo json_encode(['code' => -1, 'msg' => '请填写所有密码字段'], JSON_UNESCAPED_UNICODE);
+    // 验证原密码
+    if ($oldPwd === '') {
+        echo json_encode(['code' => -1, 'msg' => '请输入原密码以验证身份'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    if ($accounts[$currentUser] !== $oldPwd) {
+    if (!isset($accounts[$currentUser]) || $accounts[$currentUser] !== $oldPwd) {
         echo json_encode(['code' => -1, 'msg' => '原密码不正确'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    if ($newPwd !== $confirmPwd) {
-        echo json_encode(['code' => -1, 'msg' => '两次输入的新密码不一致'], JSON_UNESCAPED_UNICODE);
+    // 至少填写一项
+    if ($newUser === '' && $newPwd === '') {
+        echo json_encode(['code' => -1, 'msg' => '新账号和新密码至少填写一项'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    if (strlen($newPwd) < 6) {
+    // 校验新账号格式
+    if ($newUser !== '') {
+        if (!preg_match('/^[a-zA-Z0-9_]{2,20}$/', $newUser)) {
+            echo json_encode(['code' => -1, 'msg' => '新账号格式错误：2-20位字母、数字或下划线'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        // 如果账号名没变且只改了账号，实际上没改
+        if ($newUser === $currentUser && $newPwd === '') {
+            echo json_encode(['code' => -1, 'msg' => '新账号与当前账号相同，无需修改'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+    }
+
+    // 校验新密码格式
+    if ($newPwd !== '' && strlen($newPwd) < 6) {
         echo json_encode(['code' => -1, 'msg' => '新密码长度不能少于6位'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    // 更新配置文件中的密码
+    // 如果只改密码不改账号
+    if ($newUser === '' && $newPwd !== '') {
+        $newUser = $currentUser; // 保持原账号
+    }
+
+    // 如果只改账号不改密码，沿用原密码
+    if ($newPwd === '' && $newUser !== '') {
+        $newPwd = $accounts[$currentUser];
+    }
+
     $configFile    = __DIR__ . '/../data/data.php';
-    $configContent = file_get_contents($configFile);
-    $escapedUser   = preg_quote($currentUser, '/');
-    $pattern       = "/('{$escapedUser}'\s*=>\s*)'[^']*'/";
-    $replacement   = "$1'{$newPwd}'";
-    $newContent    = preg_replace($pattern, $replacement, $configContent);
+    $configContent = @file_get_contents($configFile);
+
+    if ($configContent === false) {
+        echo json_encode(['code' => -1, 'msg' => '无法读取配置文件 data/data.php'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $escapedOldUser = preg_quote($currentUser, '/');
+
+    // 如果账号名变了：替换整个条目 '旧账号' => '旧密码' → '新账号' => '新密码'
+    if ($newUser !== $currentUser) {
+        $pattern     = "/('{$escapedOldUser}'\s*=>\s*)'[^']*'/";
+        $replacement = "'{$newUser}' => '{$newPwd}'";
+        $newContent  = preg_replace($pattern, $replacement, $configContent);
+    } else {
+        // 仅改密码
+        $pattern     = "/('{$escapedOldUser}'\s*=>\s*)'[^']*'/";
+        $replacement = "\$1'{$newPwd}'";
+        $newContent  = preg_replace($pattern, $replacement, $configContent);
+    }
 
     if ($newContent !== null && $newContent !== $configContent) {
-        file_put_contents($configFile, $newContent, LOCK_EX);
-        echo json_encode(['code' => 0, 'msg' => '密码修改成功，下次登录时生效'], JSON_UNESCAPED_UNICODE);
+        $writeResult = @file_put_contents($configFile, $newContent, LOCK_EX);
+        if ($writeResult !== false) {
+            // 如果账号名变了，同步更新 session
+            if ($newUser !== $currentUser) {
+                $_SESSION['admin_username'] = $newUser;
+            }
+            $msg = ($newUser !== $currentUser) ? '账号密码修改成功' : '密码修改成功';
+            echo json_encode(['code' => 0, 'msg' => $msg], JSON_UNESCAPED_UNICODE);
+        } else {
+            echo json_encode(['code' => -1, 'msg' => '文件写入失败，请检查 data/ 目录权限'], JSON_UNESCAPED_UNICODE);
+        }
     } else {
-        echo json_encode(['code' => -1, 'msg' => '密码修改失败，请手动修改 data/data.php'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['code' => -1, 'msg' => '修改失败，请手动编辑 data/data.php 文件'], JSON_UNESCAPED_UNICODE);
     }
 }
 
