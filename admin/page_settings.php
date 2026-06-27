@@ -70,12 +70,12 @@ function adminShowSettings($username, $version, $seo, $apiBaseUrl, $searchTypes,
                     <div class="form-field" style="margin-bottom:14px;">
                         <label>API 接口地址</label>
                         <input type="text" id="apiBaseUrl" value="<?php echo htmlspecialchars($apiBaseUrl); ?>" placeholder="http://127.0.0.1:8010" style="width:100%;font-family:monospace;">
-                        <small style="color:#999;">结尾不加斜杠，例如：http://127.0.0.1:8010</small>
+                        <small style="color:#999;">结尾不加斜杠，例如：<b>http://127.0.0.1:8010</b>，只需域名+端口，不需要端口后的<b>/api/search</b></small>
                     </div>
                     <div class="form-field" style="margin-bottom:14px;">
-                        <label>网盘类型（搜索页可用）</label>
+                        <label>网盘类型</label>
                         <input type="text" id="searchTypes" value="<?php echo htmlspecialchars($searchTypes); ?>" placeholder="baidu,aliyun,quark,guangya,tianyi,uc,mobile,115,pikpak,xunlei,123,magnet,ed2k" style="width:100%;font-family:monospace;">
-                        <small style="color:#999;">半角逗号分隔，例如：baidu,aliyun,quark</small>
+                        <small style="color:#999;">搜索时获取的资源网盘类型，半角逗号分隔，例如：baidu,aliyun,quark</small>
                     </div>
                     <button class="btn btn-primary" onclick="saveApi()">保存接口设置</button>
                 </div>
@@ -84,7 +84,8 @@ function adminShowSettings($username, $version, $seo, $apiBaseUrl, $searchTypes,
                 <div class="panel tab-panel" id="tab-cache" style="display:none;">
                     <h3>缓存设置</h3>
                     <p class="hint-text" style="color:#667085;font-size:13px;margin-bottom:14px;">
-                        设置从远程 API 缓存到本地 oss.json 的网盘类型，使用<strong>半角逗号</strong>分隔。
+                        设置从远程 API 缓存到本地 oss.json 的网盘类型，使用<strong>半角逗号</strong>分隔。<br>
+                        通过每次访问 <a href="/ting.php" target="_blank" style="color:#4f6ef7;"><strong>http(s)://域名/ting.php</strong></a> 进行缓存。
                     </p>
                     <div class="form-field" style="margin-bottom:14px;">
                         <label>缓存网盘类型</label>

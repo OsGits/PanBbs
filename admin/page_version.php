@@ -78,7 +78,7 @@ function adminShowVersion($username, $localVersion) {
                             <span class="ver-tag"><?php echo htmlspecialchars($logName); ?></span>
                             <span class="ver-date"><?php echo htmlspecialchars(date('Y-m-d', filemtime($logFile))); ?></span>
                         </div>
-                        <a href="log/<?php echo urlencode(basename($logFile)); ?>" target="_blank" class="btn-sm" style="color:#0f3460;border-color:#0f3460;">查看</a>
+                        <a href="https://github.com/OsGits/PanBbs/blob/main/log/<?php echo urlencode(basename($logFile)); ?>" target="_blank" class="btn-sm" style="color:#0f3460;border-color:#0f3460;">查看</a>
                     </div>
                     <?php
                         endforeach;

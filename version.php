@@ -5,7 +5,7 @@
  */
 
 // ========== 本地版本 ==========
-define('PANBBS_LOCAL_VERSION', 'V2606.2721.5038');
+define('PANBBS_LOCAL_VERSION', 'V2026.0627.2220');
 
 // ========== 远程版本（从 GitHub Releases 实时获取） ==========
 $remoteVersion = null;
