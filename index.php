@@ -97,6 +97,22 @@ switch ($action) {
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         break;
 
+    // 版本接口：获取本地版本和远程最新版本
+    case 'version':
+        header('Content-Type: application/json; charset=utf-8');
+        $localVer = defined('PANBBS_LOCAL_VERSION') ? PANBBS_LOCAL_VERSION : 'unknown';
+        $latestVer = getRemoteLatestVersion();
+        echo json_encode([
+            'code' => 0,
+            'msg'  => 'success',
+            'data' => [
+                'local'       => $localVer,
+                'latest'      => $latestVer,
+                'has_remote'  => $latestVer !== null,
+            ],
+        ], JSON_UNESCAPED_UNICODE);
+        break;
+
     // 默认：展示前端模板
     default:
         $templateFile = __DIR__ . '/template/home.php';

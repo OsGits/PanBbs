@@ -350,6 +350,57 @@ body {
     transition: transform 0.3s;
 }
 
+.fab-copyright {
+    bottom: 140px;
+    color: var(--text-secondary);
+}
+.fab-copyright:hover svg {
+    transform: scale(1.1);
+}
+.fab-copyright svg {
+    transition: transform 0.3s;
+}
+
+/* ---- Copyright Modal ---- */
+.copyright-info {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.copyright-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius-xs);
+    border: 1px solid var(--border);
+}
+.copyright-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 72px;
+    flex-shrink: 0;
+}
+.copyright-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+}
+.copyright-link {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+    word-break: break-all;
+    transition: color 0.2s;
+}
+.copyright-link:hover {
+    color: #5b4bd5;
+    text-decoration: underline;
+}
+
 /* ---- Back to Top ---- */
 .back-to-top {
     position: fixed;

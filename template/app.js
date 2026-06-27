@@ -15,7 +15,8 @@
     var REFRESH_COOLDOWN = 5000; // 刷新冷却时间 5 秒
 
     var cardList, emptyBox, emptyMsg, loadStatus, skeletonBox, backToTop;
-    var fabSearch, searchOverlay, modalSearchInput, modalSearchBtn, searchModalClose, globalLoading;
+    var fabSearch, fabCopyright, searchOverlay, modalSearchInput, modalSearchBtn, searchModalClose, globalLoading;
+    var copyrightOverlay, copyrightModalClose, localVersionEl, latestVersionEl, updateHint;
     var searchPlaceholder, searchClearBtn;
 
     // ============ 安全解析 PANBBS_DATA ============
@@ -260,6 +261,60 @@
             searchOverlay.classList.remove('open');
             document.body.style.overflow = '';
         }
+    }
+
+    // ============ 版权弹窗 ============
+    function openCopyrightModal() {
+        if (copyrightOverlay) {
+            copyrightOverlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            // 打开弹窗时拉取最新版本
+            fetchLatestVersion();
+        }
+    }
+
+    function closeCopyrightModal() {
+        if (copyrightOverlay) {
+            copyrightOverlay.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+    }
+
+    var versionFetched = false;
+    function fetchLatestVersion() {
+        if (versionFetched) return;
+        versionFetched = true;
+        fetch('?a=version&t=' + Date.now(), { cache: 'no-store' })
+            .then(function (res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function (data) {
+                if (data.code === 0 && data.data) {
+                    var latest = data.data.latest || '未知';
+                    if (latestVersionEl) {
+                        latestVersionEl.textContent = latest;
+                    }
+                    // 比较版本：如果远程版本和本地不同，提示有新版本
+                    var local = data.data.local || '';
+                    if (latest && latest !== '未知' && local && latest !== local) {
+                        if (updateHint) {
+                            updateHint.style.display = '';
+                        }
+                    }
+                } else {
+                    if (latestVersionEl) {
+                        latestVersionEl.textContent = '无法获取（服务器无法访问 GitHub）';
+                        latestVersionEl.style.color = 'var(--text-muted)';
+                    }
+                }
+            })
+            .catch(function () {
+                if (latestVersionEl) {
+                    latestVersionEl.textContent = '无法获取（服务器无法访问 GitHub）';
+                    latestVersionEl.style.color = 'var(--text-muted)';
+                }
+            });
     }
 
     // 当前搜索关键词
@@ -520,6 +575,12 @@
         var inlineSearchBtn = document.getElementById('inlineSearchBtn');
         searchPlaceholder = document.getElementById('searchPlaceholder');
         searchClearBtn = document.getElementById('searchClearBtn');
+        fabCopyright = document.getElementById('fabCopyright');
+        copyrightOverlay = document.getElementById('copyrightOverlay');
+        copyrightModalClose = document.getElementById('copyrightModalClose');
+        localVersionEl = document.getElementById('localVersion');
+        latestVersionEl = document.getElementById('latestVersion');
+        updateHint = document.getElementById('updateHint');
 
         // 如果有初始关键词，更新 placeholder
         if (currentKeyword && searchPlaceholder) {
@@ -557,6 +618,18 @@
                 searchClearBtn.style.display = 'none';
                 // 重新加载全部数据
                 triggerSearchRefresh('');
+            });
+        }
+
+        // 右下角版权弹窗
+        if (fabCopyright && copyrightOverlay) {
+            fabCopyright.addEventListener('click', function () {
+                openCopyrightModal();
+            });
+        }
+        if (copyrightModalClose) {
+            copyrightModalClose.addEventListener('click', function () {
+                closeCopyrightModal();
             });
         }
 

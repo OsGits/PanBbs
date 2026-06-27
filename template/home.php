@@ -25,6 +25,7 @@ $keyword = isset($_GET['kw']) ? trim($_GET['kw']) : '';
 
 $basePath = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/template';
 $assetVer = require __DIR__ . '/../version.php';
+$localVersion = defined('PANBBS_LOCAL_VERSION') ? PANBBS_LOCAL_VERSION : 'unknown';
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -85,12 +86,47 @@ $assetVer = require __DIR__ . '/../version.php';
 </div>
 
 <!-- 右下角浮动按钮 -->
+<button class="fab fab-copyright" id="fabCopyright" title="关于">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.31 8.5c-.51-.47-1.22-.75-2-.75-1.66 0-3 1.34-3 3s1.34 3 3 3c.78 0 1.49-.28 2-.75"/><line x1="12" y1="16.5" x2="12" y2="16.51"/></svg>
+</button>
 <button class="fab fab-search" id="fabSearch" title="搜索">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
 </button>
 <button class="back-to-top" id="backToTop" title="回到顶部">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
 </button>
+
+<!-- 版权弹窗遮罩 -->
+<div class="search-overlay" id="copyrightOverlay">
+    <div class="search-modal">
+        <button class="search-modal-close" id="copyrightModalClose" title="关闭">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <h2 class="search-modal-title">关于 PanBbs</h2>
+        <div class="copyright-info">
+            <div class="copyright-row">
+                <span class="copyright-label">当前版本</span>
+                <span class="copyright-value" id="localVersion"><?= htmlspecialchars($localVersion) ?></span>
+            </div>
+            <div class="copyright-row">
+                <span class="copyright-label">最新版本</span>
+                <span class="copyright-value" id="latestVersion">获取中...</span>
+            </div>
+            <div class="copyright-row">
+                <span class="copyright-label">项目地址</span>
+                <a class="copyright-link" href="https://github.com/OsGits/PanBbs" target="_blank" rel="nofollow noopener">github.com/OsGits/PanBbs</a>
+            </div>
+            <div class="copyright-row">
+                <span class="copyright-label">后端引擎</span>
+                <a class="copyright-link" href="https://github.com/fish2018/pansou" target="_blank" rel="nofollow noopener">PanSo by fish2018</a>
+            </div>
+            <div class="copyright-row" id="updateHint" style="display:none;">
+                <span class="copyright-label"></span>
+                <span class="copyright-value" style="color:var(--orange);">有新版本可用！</span>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- 搜索弹窗遮罩 -->
 <div class="search-overlay" id="searchOverlay">
