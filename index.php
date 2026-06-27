@@ -58,7 +58,18 @@ switch ($action) {
 
         $searchKw    = isset($_GET['kw']) ? trim($_GET['kw']) : '';
         $remoteApi   = 'http://127.0.0.1:8010/api/search?kw=' . urlencode($searchKw) . '&conc=30&res=all';
-        $targetTypes = ['115', 'guangya', 'quark'];
+
+        // 支持前端传入 types 参数筛选网盘类型
+        $allTypes = ['baidu','aliyun','quark','guangya','tianyi','uc','mobile','115','pikpak','xunlei','123','magnet','ed2k'];
+        if (isset($_GET['types']) && $_GET['types'] !== '') {
+            $targetTypes = array_intersect($allTypes, explode(',', $_GET['types']));
+            $targetTypes = array_values($targetTypes); // 重置键名
+        } else {
+            $targetTypes = $allTypes; // 未指定 = 搜索全部网盘
+        }
+        if (empty($targetTypes)) {
+            $targetTypes = $allTypes;
+        }
 
         // 获取远程数据
         $rawData = fetchRemoteData($remoteApi);

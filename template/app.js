@@ -18,6 +18,7 @@
     var fabSearch, fabCopyright, searchOverlay, modalSearchInput, modalSearchBtn, searchModalClose, globalLoading;
     var copyrightOverlay, copyrightModalClose, localVersionEl, latestVersionEl, updateHint;
     var searchPlaceholder, searchClearBtn;
+    var searchTypeCheckboxes, searchTypeToggle;
 
     // ============ 安全解析 PANBBS_DATA ============
     try {
@@ -361,18 +362,61 @@
 
     // 当前搜索关键词
     var currentKeyword = (typeof PANBBS_KEYWORD !== 'undefined' && PANBBS_KEYWORD) ? PANBBS_KEYWORD : '';
+    // 当前选中的网盘类型（空数组=全部）
+    var currentTypes = [];
+
+    // 全选/取消全选
+    function toggleAllTypes() {
+        if (!searchTypeCheckboxes) return;
+        var allChecked = true;
+        for (var i = 0; i < searchTypeCheckboxes.length; i++) {
+            if (!searchTypeCheckboxes[i].checked) { allChecked = false; break; }
+        }
+        var newState = !allChecked;
+        for (var i = 0; i < searchTypeCheckboxes.length; i++) {
+            searchTypeCheckboxes[i].checked = newState;
+        }
+        if (searchTypeToggle) {
+            searchTypeToggle.textContent = newState ? '取消全选' : '全选';
+        }
+    }
+
+    // 复选框变化时更新"全选"按钮文字
+    function onTypeCheckChange() {
+        if (!searchTypeCheckboxes || !searchTypeToggle) return;
+        var allChecked = true;
+        for (var i = 0; i < searchTypeCheckboxes.length; i++) {
+            if (!searchTypeCheckboxes[i].checked) { allChecked = false; break; }
+        }
+        searchTypeToggle.textContent = allChecked ? '取消全选' : '全选';
+    }
+
+    // 获取当前选中的网盘类型
+    function getCheckedTypes() {
+        if (!searchTypeCheckboxes) return [];
+        var types = [];
+        for (var i = 0; i < searchTypeCheckboxes.length; i++) {
+            if (searchTypeCheckboxes[i].checked) {
+                types.push(searchTypeCheckboxes[i].value);
+            }
+        }
+        return types;
+    }
+
+
 
     function submitModalSearch() {
         var kw = modalSearchInput ? modalSearchInput.value.trim() : '';
+        currentTypes = getCheckedTypes();
         closeSearchModal();
 
         if (kw === '') {
-            // 清空搜索：刷新回首页无关键词
+            // 清空搜索：刷新回首页无关键词，但保留 type 筛选
             currentKeyword = '';
             if (window.history && window.history.replaceState) {
                 window.history.replaceState(null, '', window.location.pathname);
             }
-            triggerSearchRefresh('');
+            triggerSearchRefresh('', currentTypes);
             return;
         }
 
@@ -395,6 +439,7 @@
                 searchClearBtn.textContent = '✕ 清除筛选';
                 searchClearBtn.addEventListener('click', function () {
                     currentKeyword = '';
+                    currentTypes = [];
                     if (window.history && window.history.replaceState) {
                         window.history.replaceState(null, '', window.location.pathname);
                     }
@@ -402,7 +447,7 @@
                         searchPlaceholder.textContent = '搜索要寻找的影片名...';
                     }
                     searchClearBtn.style.display = 'none';
-                    triggerSearchRefresh('');
+                    triggerSearchRefresh('', []);
                 });
                 toolbar.appendChild(searchClearBtn);
             }
@@ -410,11 +455,11 @@
             searchClearBtn.style.display = '';
         }
         // 通过远程API搜索
-        triggerSearchRefresh(kw);
+        triggerSearchRefresh(kw, currentTypes);
     }
 
     // ============ 搜索刷新：直接调用远程API获取并展示（不存储到本地JSON） ============
-    function triggerSearchRefresh(kw) {
+    function triggerSearchRefresh(kw, types) {
         if (refreshing) return;
 
         refreshing = true;
@@ -433,11 +478,26 @@
             }
         }, 60000);
 
-        // 搜索时：直接调用 ?a=search&kw=xxx 从远程API获取数据，不存储
-        // 非搜索时：走原来逻辑加载本地数据
+        // 辅助：按 type 过滤数据
+        function filterByTypes(items, types) {
+            if (!types || types.length === 0) return items;
+            var typeSet = {};
+            for (var t = 0; t < types.length; t++) {
+                typeSet[types[t]] = true;
+            }
+            return items.filter(function (item) {
+                return typeSet[item.type] === true;
+            });
+        }
+
         if (kw) {
             // 搜索模式：直接请求远程API
-            fetch('?a=search&kw=' + encodeURIComponent(kw) + '&t=' + Date.now(), { cache: 'no-store' })
+            var searchUrl = '?a=search&kw=' + encodeURIComponent(kw);
+            if (types && types.length > 0) {
+                searchUrl += '&types=' + encodeURIComponent(types.join(','));
+            }
+            searchUrl += '&t=' + Date.now();
+            fetch(searchUrl, { cache: 'no-store' })
                 .then(function (res) {
                     if (!res.ok) throw new Error('服务器返回 ' + res.status);
                     return res.json();
@@ -450,6 +510,10 @@
                     }
 
                     allItems = searchData.data || [];
+                    // 如果后端没做筛选，前端兜底
+                    if (types && types.length > 0) {
+                        allItems = filterByTypes(allItems, types);
+                    }
                     rendered = 0;
                     isEnd = false;
                     cardList.innerHTML = '';
@@ -497,7 +561,8 @@
                         return String(b.add_time || '').localeCompare(String(a.add_time || ''));
                     });
 
-                    allItems = merged;
+                    // 如果有 type 筛选，过滤
+                    allItems = filterByTypes(merged, types);
                     rendered = 0;
                     isEnd = false;
                     cardList.innerHTML = '';
@@ -623,6 +688,9 @@
         localVersionEl = document.getElementById('localVersion');
         latestVersionEl = document.getElementById('latestVersion');
         updateHint = document.getElementById('updateHint');
+        searchTypeCheckboxes = document.querySelectorAll('#searchTypeFilter input[name="searchType"]');
+        searchTypeToggle = document.getElementById('searchTypeToggle');
+
 
         // 如果有初始关键词，更新 placeholder
         if (currentKeyword && searchPlaceholder) {
@@ -706,6 +774,20 @@
             });
         }
         // ESC 键不再关闭弹窗，只能通过X按钮关闭
+
+        // 网盘类型筛选复选框
+        if (searchTypeCheckboxes) {
+            for (var i = 0; i < searchTypeCheckboxes.length; i++) {
+                searchTypeCheckboxes[i].addEventListener('change', onTypeCheckChange);
+            }
+        }
+        // 全选/取消全选按钮
+        if (searchTypeToggle) {
+            searchTypeToggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                toggleAllTypes();
+            });
+        }
 
         window.addEventListener('scroll', onScroll, { passive: true });
 

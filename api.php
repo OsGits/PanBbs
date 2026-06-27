@@ -128,6 +128,8 @@ function flattenRecord($item, $targetTypes) {
     }
     $tags = stripUrls($tags);
     $links = isset($item['links']) ? $item['links'] : [];
+    // 从远程数据中提取 datetime 字段作为 add_time
+    $addTime = isset($item['datetime']) ? trim($item['datetime']) : '';
 
     if (empty($links) || !is_array($links)) {
         return $records;
@@ -146,7 +148,7 @@ function flattenRecord($item, $targetTypes) {
             'tags'     => $tags,
             'content'  => $content,
             'type'     => $linkType,
-            'add_time' => date('Y-m-d H:i:s'),
+            'add_time' => $addTime,
         ];
     }
 
