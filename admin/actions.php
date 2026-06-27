@@ -506,8 +506,8 @@ function adminHandleOnlineUpdate() {
         }
         $srcDir = $innerDirs[0];
 
-        // 3. 覆盖文件（排除 .vscode、data/ 等本地配置目录）
-        $exclude = ['.vscode', '.git', 'data', 'log'];
+        // 3. 覆盖文件（排除本地配置目录和 Git 相关文件）
+        $exclude = ['.vscode', '.git', '.gitignore', '.gitattributes', 'data'];
         $copiedCount = copyDir($srcDir, $rootDir, $exclude);
 
         // 4. 更新 version.php 中的本地版本号
@@ -567,7 +567,11 @@ function copyDir($src, $dst, $exclude = []) {
             }
             $count += copyDir($srcPath, $dstPath, $exclude);
         } else {
-            if (copy($srcPath, $dstPath)) {
+            // 覆盖前先尝试删除目标文件（避免权限问题）
+            if (file_exists($dstPath)) {
+                @unlink($dstPath);
+            }
+            if (@copy($srcPath, $dstPath)) {
                 $count++;
             }
         }

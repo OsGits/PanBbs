@@ -112,7 +112,7 @@ function adminShowVersion($username, $localVersion, $remoteVersion = null, $remo
             xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
             xhr.onload = function() {
                 try { var res = JSON.parse(xhr.responseText); callback(res); }
-                catch(e) { showToast('服务器响应异常', 'error'); }
+                catch(e) { showToast('服务器响应异常: ' + xhr.responseText.substring(0, 200), 'error'); }
             };
             xhr.onerror = function() { showToast('网络请求失败', 'error'); };
             var params = [];
