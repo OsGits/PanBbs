@@ -56,7 +56,7 @@ function adminShowVersion($username, $localVersion, $remoteVersion = null, $remo
                     <?php if ($remoteVersion && $remoteVersion !== $localVersion): ?>
                     <div style="margin-top:16px; display:flex; gap:12px;">
                         <button class="btn btn-primary" onclick="onlineUpdate()">在线更新</button>
-                        <a href="<?php echo htmlspecialchars($remoteZipUrl ?: 'https://github.com/OsGits/PanBbs/releases/latest'); ?>" target="_blank" class="btn" style="border-color:#ff9800;color:#ff9800;text-decoration:none;line-height:36px;">离线更新</a>
+                        <a href="<?php echo htmlspecialchars($remoteZipUrl ?: 'https://github.com/OsGits/PanBbs/releases/latest'); ?>" target="_blank" class="btn" style="border-color:#ff9800;color:#ff9800;background:#fff;text-decoration:none;display:inline-block;padding:8px 20px;border-radius:4px;border:1px solid;cursor:pointer;">离线更新</a>
                     </div>
                     <?php endif; ?>
                 </div>
