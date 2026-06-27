@@ -31,6 +31,12 @@ $seo = [
     'description' => '网盘资源聚合搜索平台，快速发现您需要的资源',
 ];
 
+// ========== 接口设置 ==========
+// API 接口地址，结尾不加斜杠
+$apiBaseUrl = 'http://127.0.0.1:8010';
+// 搜索页可搜索的网盘类型，半角逗号分隔
+$searchTypes = 'baidu,aliyun,quark,guangya,tianyi,uc,mobile,115,pikpak,xunlei,123,magnet,ed2k';
+
 // ========== 缓存设置 ==========
 // 需要从远程API缓存到本地json的网盘类型，半角逗号分隔
 $cachePans = '115,guangya,quark';
@@ -38,8 +44,10 @@ $cachePans = '115,guangya,quark';
 $maxRecords = 100;
 
 return [
-    'accounts'    => $accounts,
-    'seo'         => $seo,
-    'cache_pans'  => $cachePans,
-    'max_records' => $maxRecords,
+    'accounts'     => $accounts,
+    'seo'          => $seo,
+    'api_base_url' => $apiBaseUrl,
+    'search_types' => $searchTypes,
+    'cache_pans'   => $cachePans,
+    'max_records'  => $maxRecords,
 ];

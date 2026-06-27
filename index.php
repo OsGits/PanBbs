@@ -57,11 +57,21 @@ switch ($action) {
     case 'search':
         header('Content-Type: application/json; charset=utf-8');
 
-        $searchKw    = isset($_GET['kw']) ? trim($_GET['kw']) : '';
-        $remoteApi   = 'http://127.0.0.1:8010/api/search?kw=' . urlencode($searchKw) . '&conc=30&res=all';
+        $searchKw  = isset($_GET['kw']) ? trim($_GET['kw']) : '';
+
+        // 从配置文件读取 API 地址和网盘类型
+        define('SEO_ACCESS', true);
+        $config      = require __DIR__ . '/data/data.php';
+        $apiBaseUrl  = isset($config['api_base_url']) ? $config['api_base_url'] : 'http://127.0.0.1:8010';
+        $searchTypes = isset($config['search_types']) ? $config['search_types'] : 'baidu,aliyun,quark,guangya,tianyi,uc,mobile,115,pikpak,xunlei,123,magnet,ed2k';
+
+        $remoteApi = $apiBaseUrl . '/api/search?kw=' . urlencode($searchKw) . '&conc=30&res=all';
 
         // 支持前端传入 types 参数筛选网盘类型
-        $allTypes = ['baidu','aliyun','quark','guangya','tianyi','uc','mobile','115','pikpak','xunlei','123','magnet','ed2k'];
+        $allTypes = array_filter(array_map('trim', explode(',', $searchTypes)));
+        if (empty($allTypes)) {
+            $allTypes = ['baidu','aliyun','quark','guangya','tianyi','uc','mobile','115','pikpak','xunlei','123','magnet','ed2k'];
+        }
         if (isset($_GET['types']) && $_GET['types'] !== '') {
             $targetTypes = array_intersect($allTypes, explode(',', $_GET['types']));
             $targetTypes = array_values($targetTypes); // 重置键名

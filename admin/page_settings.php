@@ -14,10 +14,12 @@ if (!defined('ADMIN_ACCESS')) {
  * @param string $username     当前登录用户名
  * @param string $version      当前版本号
  * @param array  $seo          当前 SEO 配置 ['title','keywords','description']
+ * @param string $apiBaseUrl   API 接口地址
+ * @param string $searchTypes  搜索页网盘类型，半角逗号分隔
  * @param string $cachePans    缓存网盘类型，半角逗号分隔
  * @param int    $maxRecords   每种类型最大缓存记录数
  */
-function adminShowSettings($username, $version, $seo, $cachePans, $maxRecords) {
+function adminShowSettings($username, $version, $seo, $apiBaseUrl, $searchTypes, $cachePans, $maxRecords) {
     require_once __DIR__ . '/layout_head.php';
     require_once __DIR__ . '/layout_topbar.php';
     require_once __DIR__ . '/layout_sidebar.php';
@@ -36,6 +38,7 @@ function adminShowSettings($username, $version, $seo, $cachePans, $maxRecords) {
                 <!-- 标签导航 -->
                 <div class="tab-nav">
                     <button class="tab-btn active" data-tab="tab-seo">前端 SEO 设置</button>
+                    <button class="tab-btn" data-tab="tab-api">接口设置</button>
                     <button class="tab-btn" data-tab="tab-cache">缓存设置</button>
                     <button class="tab-btn" data-tab="tab-password">修改密码</button>
                 </div>
@@ -56,6 +59,25 @@ function adminShowSettings($username, $version, $seo, $cachePans, $maxRecords) {
                         <textarea id="seoDescription" rows="3" style="width:100%;padding:8px 12px;border:1px solid #d0d5dd;border-radius:6px;font-size:14px;resize:vertical;" placeholder="网盘资源聚合搜索平台"><?php echo htmlspecialchars($seo['description']); ?></textarea>
                     </div>
                     <button class="btn btn-primary" onclick="saveSeo()">保存 SEO 设置</button>
+                </div>
+
+                <!-- 接口设置面板 -->
+                <div class="panel tab-panel" id="tab-api" style="display:none;">
+                    <h3>接口设置</h3>
+                    <p class="hint-text" style="color:#667085;font-size:13px;margin-bottom:14px;">
+                        配置全局 API 接口地址和搜索页可使用的网盘类型。
+                    </p>
+                    <div class="form-field" style="margin-bottom:14px;">
+                        <label>API 接口地址</label>
+                        <input type="text" id="apiBaseUrl" value="<?php echo htmlspecialchars($apiBaseUrl); ?>" placeholder="http://127.0.0.1:8010" style="width:100%;font-family:monospace;">
+                        <small style="color:#999;">结尾不加斜杠，例如：http://127.0.0.1:8010</small>
+                    </div>
+                    <div class="form-field" style="margin-bottom:14px;">
+                        <label>网盘类型（搜索页可用）</label>
+                        <input type="text" id="searchTypes" value="<?php echo htmlspecialchars($searchTypes); ?>" placeholder="baidu,aliyun,quark,guangya,tianyi,uc,mobile,115,pikpak,xunlei,123,magnet,ed2k" style="width:100%;font-family:monospace;">
+                        <small style="color:#999;">半角逗号分隔，例如：baidu,aliyun,quark</small>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveApi()">保存接口设置</button>
                 </div>
 
                 <!-- 缓存设置面板 -->
@@ -143,6 +165,36 @@ function adminShowSettings($username, $version, $seo, $cachePans, $maxRecords) {
                 params.push(encodeURIComponent(key) + '=' + encodeURIComponent(data[key]));
             }
             xhr.send(params.join('&'));
+        }
+
+        // ===== 接口设置保存 =====
+        function saveApi() {
+            var apiBaseUrl = document.getElementById('apiBaseUrl').value.trim();
+            var searchTypes = document.getElementById('searchTypes').value.trim();
+            if (!apiBaseUrl) {
+                showToast('请输入 API 接口地址', 'error'); return;
+            }
+            if (!/^https?:\/\/.+/.test(apiBaseUrl)) {
+                showToast('API 接口地址格式错误，需以 http:// 或 https:// 开头', 'error'); return;
+            }
+            if (apiBaseUrl.slice(-1) === '/') {
+                showToast('API 接口地址结尾请不要加斜杠', 'error'); return;
+            }
+            if (!searchTypes) {
+                showToast('请输入网盘类型', 'error'); return;
+            }
+            if (!/^[a-z0-9]+(,[a-z0-9]+)*$/i.test(searchTypes)) {
+                showToast('网盘类型格式错误，请使用半角逗号分隔', 'error'); return;
+            }
+            postAction({
+                action: 'save_api',
+                api_base_url: apiBaseUrl,
+                search_types: searchTypes
+            }, function(res) {
+                if (res.code === 0) {
+                    showToast(res.msg, 'success');
+                } else { showToast(res.msg, 'error'); }
+            });
         }
 
         // ===== 缓存设置保存 =====

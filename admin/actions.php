@@ -48,10 +48,11 @@ function adminHandleActions($ossFile, $accounts) {
 
         // 手动触发数据抓取
         case 'fetch_data':
-            $remoteApi   = 'http://127.0.0.1:8010/api/search?kw=&conc=30&res=all';
-            $dataDir     = dirname($ossFile);
-            // 从配置文件读取缓存网盘类型和最大记录数
+            // 从配置文件读取 API 地址、缓存网盘类型和最大记录数
             $config      = require __DIR__ . '/../data/data.php';
+            $apiBaseUrl  = isset($config['api_base_url']) ? $config['api_base_url'] : 'http://127.0.0.1:8010';
+            $remoteApi   = $apiBaseUrl . '/api/search?kw=&conc=30&res=all';
+            $dataDir     = dirname($ossFile);
             $cachePans   = isset($config['cache_pans']) ? $config['cache_pans'] : '115,guangya,quark';
             $targetTypes = array_filter(array_map('trim', explode(',', $cachePans)));
             if (empty($targetTypes)) {
@@ -77,6 +78,11 @@ function adminHandleActions($ossFile, $accounts) {
         // 保存 SEO 配置
         case 'save_seo':
             adminHandleSaveSeo();
+            exit;
+
+        // 保存接口设置
+        case 'save_api':
+            adminHandleSaveApi();
             exit;
 
         // 保存缓存设置
@@ -304,6 +310,87 @@ function adminHandleSaveCache() {
     $writeResult = @file_put_contents($configFile, $configContent, LOCK_EX);
     if ($writeResult !== false) {
         echo json_encode(['code' => 0, 'msg' => '缓存设置已保存'], JSON_UNESCAPED_UNICODE);
+    } else {
+        echo json_encode(['code' => -1, 'msg' => '文件写入失败，请检查 data/ 目录权限'], JSON_UNESCAPED_UNICODE);
+    }
+}
+
+/**
+ * 处理接口设置保存
+ */
+function adminHandleSaveApi() {
+    $apiBaseUrl  = isset($_POST['api_base_url']) ? trim($_POST['api_base_url']) : '';
+    $searchTypes = isset($_POST['search_types']) ? trim($_POST['search_types']) : '';
+
+    if ($apiBaseUrl === '') {
+        echo json_encode(['code' => -1, 'msg' => 'API 接口地址不能为空'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if (!preg_match('#^https?://.+#', $apiBaseUrl)) {
+        echo json_encode(['code' => -1, 'msg' => 'API 接口地址格式错误，需以 http:// 或 https:// 开头'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if (substr($apiBaseUrl, -1) === '/') {
+        echo json_encode(['code' => -1, 'msg' => 'API 接口地址结尾请不要加斜杠'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if ($searchTypes === '') {
+        echo json_encode(['code' => -1, 'msg' => '网盘类型不能为空'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if (!preg_match('/^[a-z0-9]+(,[a-z0-9]+)*$/i', $searchTypes)) {
+        echo json_encode(['code' => -1, 'msg' => '网盘类型格式错误，请使用半角逗号分隔'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $configFile    = __DIR__ . '/../data/data.php';
+    $configContent = @file_get_contents($configFile);
+
+    if ($configContent === false) {
+        echo json_encode(['code' => -1, 'msg' => '无法读取配置文件'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $safeUrl   = str_replace("'", "\\'", $apiBaseUrl);
+    $safeTypes = str_replace("'", "\\'", $searchTypes);
+
+    // 替换 $apiBaseUrl = '...' 的值部分
+    $count = 0;
+    $configContent = preg_replace(
+        "/\\\$apiBaseUrl\s*=\s*'[^']*'/",
+        "\$apiBaseUrl = '{$safeUrl}'",
+        $configContent,
+        -1,
+        $count
+    );
+
+    if ($configContent === null || $count === 0) {
+        echo json_encode(['code' => -1, 'msg' => 'API 接口地址替换失败，请检查配置文件格式'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // 替换 $searchTypes = '...' 的值部分
+    $count2 = 0;
+    $configContent = preg_replace(
+        "/\\\$searchTypes\s*=\s*'[^']*'/",
+        "\$searchTypes = '{$safeTypes}'",
+        $configContent,
+        -1,
+        $count2
+    );
+
+    if ($configContent === null || $count2 === 0) {
+        echo json_encode(['code' => -1, 'msg' => '网盘类型替换失败，请检查配置文件格式'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $writeResult = @file_put_contents($configFile, $configContent, LOCK_EX);
+    if ($writeResult !== false) {
+        echo json_encode(['code' => 0, 'msg' => '接口设置已保存'], JSON_UNESCAPED_UNICODE);
     } else {
         echo json_encode(['code' => -1, 'msg' => '文件写入失败，请检查 data/ 目录权限'], JSON_UNESCAPED_UNICODE);
     }

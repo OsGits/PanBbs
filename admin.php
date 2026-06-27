@@ -17,6 +17,8 @@ define('ADMIN_ACCESS', true);
 $dataConfig    = require __DIR__ . '/data/data.php';
 $adminAccounts = $dataConfig['accounts'];
 $seoConfig     = $dataConfig['seo'];
+$apiBaseUrl    = isset($dataConfig['api_base_url']) ? $dataConfig['api_base_url'] : 'http://127.0.0.1:8010';
+$searchTypes   = isset($dataConfig['search_types']) ? $dataConfig['search_types'] : 'baidu,aliyun,quark,guangya,tianyi,uc,mobile,115,pikpak,xunlei,123,magnet,ed2k';
 $cachePans     = $dataConfig['cache_pans'];
 $maxRecords    = isset($dataConfig['max_records']) ? $dataConfig['max_records'] : 100;
 require_once __DIR__ . '/api.php';
@@ -61,7 +63,7 @@ $page = isset($_GET['a']) ? $_GET['a'] : 'dashboard';
 
 switch ($page) {
     case 'settings':
-        adminShowSettings($currentUser, $localVersion, $seoConfig, $cachePans, $maxRecords);
+        adminShowSettings($currentUser, $localVersion, $seoConfig, $apiBaseUrl, $searchTypes, $cachePans, $maxRecords);
         break;
 
     case 'version':
