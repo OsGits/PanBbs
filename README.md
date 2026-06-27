@@ -30,29 +30,46 @@ PanSo（后端 API）  ←   PanBbs（扩展前端）
 - **骨架屏加载** — 首屏加载时显示骨架屏动画，提升感知体验
 - **回到顶部** — 右下角浮动按钮，滚动超过 500px 时显示
 - **全局加载遮罩** — 数据刷新时显示遮罩，防止重复操作
+- **后台管理面板** — 提供数据统计、系统设置（SEO / 缓存 / 密码）、版本管理等功能
+- **缓存配置** — 后台可配置缓存网盘类型及每种类型的最大记录数
+- **版本更新检测** — 自动从 GitHub Releases 获取远程版本，前端弹窗提示更新
 - **静态资源版本控制** — 通过 `version.php` 统一管理 CSS/JS 缓存版本号
 
 ## 目录结构
 
 ```
 PanBbs/
-├── index.php              # 路由入口（home / api / search / version）
+├── index.php              # 前台路由入口（home / api / search / version）
 ├── api.php                # 工具函数库（数据获取、解析、展平、存储）
-├── ting.php               # 数据抓取触发脚本（拉取远程数据 → 存入 oss.json）
-├── version.php            # 本地版本号定义
-├── data/
+├── ting.php               # 数据抓取触发脚本（覆盖模式，拉取远程数据 → 替换 oss.json）
+├── version.php            # 统一版本管理（本地版本 + 远程 GitHub 版本 + 1h 缓存）
+├── admin.php              # 后台路由入口（dashboard / settings / version）
+├── admin/                 # 后台管理模块
+│   ├── actions.php        # AJAX 操作处理（抓取数据、清空缓存、修改配置等）
+│   ├── auth.php           # 登录验证逻辑
+│   ├── layout_head.php    # 后台公共头部
+│   ├── layout_sidebar.php # 后台侧边栏导航
+│   ├── layout_topbar.php  # 后台顶部栏
+│   ├── page_dashboard.php # 控制面板（数据统计概览）
+│   ├── page_login.php     # 登录页面
+│   ├── page_settings.php  # 系统设置（SEO / 缓存设置 / 修改密码）
+│   └── page_version.php   # 版本管理（修改版本号 + 更新日志列表）
+├── data/                  # 数据与配置
+│   ├── data.php           # 配置文件（账号密码、SEO、缓存类型、最大记录数）
 │   └── index.php          # 目录占位（oss.json 由 ting.php 自动生成）
 ├── log/                   # 更新日志
-│   └── V0.0.5.md          # 版本更新记录
-└── template/              # 前端模板（模块化拆分）
+│   ├── V0.0.5.md
+│   ├── v0.0.6.md
+│   └── V2606.2720.5633.md
+└── template/              # 前台模板（模块化拆分）
     ├── home.php           # 模块中枢（require 各子模块）
-    ├── _head.php          # HTML头部 + 数据准备
+    ├── _head.php          # HTML头部 + 数据准备 + SEO 注入
     ├── _header.php        # 顶部导航栏
     ├── _toolbar.php       # 工具栏 + 骨架屏 + 加载指示器
     ├── _content.php       # 卡片容器 + 空状态
     ├── _fab.php           # 右下角浮动按钮组（搜索 / 版本信息）
     ├── _modal_search.php  # 搜索弹窗（含网盘类型复选框筛选）
-    ├── _modal_version.php # 版本信息弹窗
+    ├── _modal_version.php # 版本信息弹窗（含更新提示）
     ├── _footer.php        # 页脚 + 全局加载遮罩 + JS 注入
     ├── app.js             # 前端交互脚本（滚动加载、搜索、版本检测、网盘筛选等）
     └── style.css          # 样式表（现代简约风格 + 毛玻璃效果）
@@ -67,13 +84,22 @@ PanBbs/
 | `?a=home`（默认） | 渲染前端模板页面 |
 | `?a=api&type=xxx` | 返回本地 `data/oss.json` 中指定类型的数据（JSON） |
 | `?a=search&kw=xxx` | 调用远程 API 搜索，解析展平后直接返回 JSON，**不存储到本地** |
+| `?a=version` | 返回本地版本与远程版本号（JSON），供前端版本检测使用 |
 
 ### 数据抓取 (`ting.php`)
 
 - 访问 `ting.php` 触发从远程 API 拉取全量数据
-- 按类型分类后，按 URL 去重，合并写入 `data/oss.json`
-- 每种类型最多保留 100 条记录（循环覆盖）
+- 按类型分类后，按 URL 去重，**覆盖写入** `data/oss.json`（非增量合并）
+- 缓存类型和最大记录数由 `data/data.php` 中的 `$cachePans` / `$maxRecords` 控制
 - 支持 `?debug=1` 调试模式，逐步排查抓取问题
+
+### 后台管理 (`admin.php`)
+
+- 访问 `admin.php` 进入后台登录页（默认账号：`admin` / `admin123`）
+- **控制面板** (`?a=dashboard`)：数据统计概览
+- **系统设置** (`?a=settings`)：SEO 配置 / 缓存网盘类型 / 修改密码
+- **版本管理** (`?a=version`)：修改版本号 + 查看更新日志
+- 所有配置修改通过正则替换直接写入 PHP 源文件，无需数据库
 
 ### 前端数据加载
 
@@ -98,7 +124,7 @@ PanBbs/
 
 2. **数据目录权限** — `data/` 目录需要 PHP 写入权限，`ting.php` 运行时会在此目录生成 `oss.json`。
 
-3. **目标类型** — 当前仅处理 `115`、`guangya`、`quark` 三种网盘类型，其他类型的链接会被自动过滤。修改 `$targetTypes` 数组可调整。
+3. **目标类型** — 缓存网盘类型由 `data/data.php` 中的 `$cachePans` 配置控制，可在后台"系统设置" → "缓存设置"中修改，或直接编辑配置文件。
 
 4. **搜索不落盘** — 搜索请求走 `?a=search` 直接从远程 API 获取并返回，不会写入本地 `oss.json`，确保本地数据干净。
 
@@ -108,7 +134,7 @@ PanBbs/
 
 7. **缓存刷新** — 修改 CSS/JS 后，更新 `version.php` 中的版本号即可强制浏览器刷新缓存。
 
-8. **最大记录数** — 每种类型最多保留 100 条记录（在 `ting.php` 中配置 `$maxRecords`），超出部分会被自动截断。
+8. **最大记录数** — 每种类型最多保留的记录数由 `data/data.php` 中的 `$maxRecords` 配置控制（默认 100），超出部分会被自动截断。可在后台"系统设置" → "缓存设置"中修改。
 
 ## 部署
 
