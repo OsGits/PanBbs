@@ -134,7 +134,7 @@ function adminShowLoginPage($errorMsg = '') {
             <button type="submit" class="btn-login">登 录</button>
         </form>
         <p class="security-tip">
-            默认账号: admin / 密码: panbbs2024<br>
+            默认账号: admin / 密码: admin123<br>
             请登录后尽快修改密码
         </p>
     </div>
