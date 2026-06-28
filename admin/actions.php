@@ -231,6 +231,7 @@ function adminHandleSaveSeo() {
     $title       = isset($_POST['seo_title']) ? trim($_POST['seo_title']) : '';
     $keywords    = isset($_POST['seo_keywords']) ? trim($_POST['seo_keywords']) : '';
     $description = isset($_POST['seo_description']) ? trim($_POST['seo_description']) : '';
+    $theme       = isset($_POST['seo_theme']) ? trim($_POST['seo_theme']) : '';
 
     if ($title === '') {
         echo json_encode(['code' => -1, 'msg' => 'Title 不能为空'], JSON_UNESCAPED_UNICODE);
@@ -284,6 +285,19 @@ function adminHandleSaveSeo() {
     if ($configContent === null) {
         echo json_encode(['code' => -1, 'msg' => 'Description 替换失败'], JSON_UNESCAPED_UNICODE);
         exit;
+    }
+
+    // 替换默认色彩 default_theme
+    if ($theme === 'light' || $theme === 'dark') {
+        $configContent = preg_replace(
+            "/\\\$defaultTheme\s*=\s*'[^']*'/",
+            "\$defaultTheme = '{$theme}'",
+            $configContent
+        );
+        if ($configContent === null) {
+            echo json_encode(['code' => -1, 'msg' => '默认色彩替换失败'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
     }
 
     $writeResult = @file_put_contents($configFile, $configContent, LOCK_EX);

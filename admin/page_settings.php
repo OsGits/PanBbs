@@ -18,8 +18,9 @@ if (!defined('ADMIN_ACCESS')) {
  * @param string $searchTypes  搜索页网盘类型，半角逗号分隔
  * @param string $cachePans    缓存网盘类型，半角逗号分隔
  * @param int    $maxRecords   每种类型最大缓存记录数
+ * @param string $defaultTheme 前端默认色彩 light|dark
  */
-function adminShowSettings($username, $version, $seo, $apiBaseUrl, $searchTypes, $cachePans, $maxRecords) {
+function adminShowSettings($username, $version, $seo, $apiBaseUrl, $searchTypes, $cachePans, $maxRecords, $defaultTheme = 'light') {
     require_once __DIR__ . '/layout_head.php';
     require_once __DIR__ . '/layout_topbar.php';
     require_once __DIR__ . '/layout_sidebar.php';
@@ -57,6 +58,14 @@ function adminShowSettings($username, $version, $seo, $apiBaseUrl, $searchTypes,
                     <div class="form-field" style="margin-bottom:14px;">
                         <label>Description（页面描述）</label>
                         <textarea id="seoDescription" rows="3" style="width:100%;padding:8px 12px;border:1px solid #d0d5dd;border-radius:6px;font-size:14px;resize:vertical;" placeholder="网盘资源聚合搜索平台"><?php echo htmlspecialchars($seo['description']); ?></textarea>
+                    </div>
+                    <div class="form-field" style="margin-bottom:14px;">
+                        <label>前端默认色彩</label>
+                        <select id="seoTheme" style="width:100%;padding:8px 12px;border:1px solid #d0d5dd;border-radius:6px;font-size:14px;">
+                            <option value="light" <?php echo $defaultTheme === 'light' ? 'selected' : ''; ?>>☀️ 日间模式</option>
+                            <option value="dark" <?php echo $defaultTheme === 'dark' ? 'selected' : ''; ?>>🌙 夜间模式</option>
+                        </select>
+                        <small style="color:#999;">用户首次访问时的默认色彩，用户切换后优先使用本地存储的偏好</small>
                     </div>
                     <button class="btn btn-primary" onclick="saveSeo()">保存 SEO 设置</button>
                 </div>
@@ -232,6 +241,7 @@ function adminShowSettings($username, $version, $seo, $apiBaseUrl, $searchTypes,
             var title = document.getElementById('seoTitle').value.trim();
             var keywords = document.getElementById('seoKeywords').value.trim();
             var description = document.getElementById('seoDescription').value.trim();
+            var theme = document.getElementById('seoTheme').value.trim();
             if (!title) {
                 showToast('Title 不能为空', 'error'); return;
             }
@@ -239,7 +249,8 @@ function adminShowSettings($username, $version, $seo, $apiBaseUrl, $searchTypes,
                 action: 'save_seo',
                 seo_title: title,
                 seo_keywords: keywords,
-                seo_description: description
+                seo_description: description,
+                seo_theme: theme
             }, function(res) {
                 if (res.code === 0) {
                     showToast(res.msg, 'success');

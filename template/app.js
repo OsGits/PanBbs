@@ -775,6 +775,7 @@
         searchPlaceholder = document.getElementById('searchPlaceholder');
         searchClearBtn = document.getElementById('searchClearBtn');
         fabCopyright = document.getElementById('fabCopyright');
+        var fabTheme = document.getElementById('fabTheme');
         copyrightOverlay = document.getElementById('copyrightOverlay');
         copyrightModalClose = document.getElementById('copyrightModalClose');
         localVersionEl = document.getElementById('localVersion');
@@ -898,6 +899,26 @@
         }
 
         window.addEventListener('scroll', onScroll, { passive: true });
+
+        // ============ 主题切换 ============
+        // 读取本地存储的偏好，覆盖后端默认值
+        (function () {
+            var savedTheme = localStorage.getItem('panbbs_theme');
+            var html = document.documentElement;
+            if (savedTheme === 'dark' || savedTheme === 'light') {
+                html.className = html.className.replace(/theme-(light|dark)/, 'theme-' + savedTheme);
+            }
+        })();
+
+        if (fabTheme) {
+            fabTheme.addEventListener('click', function () {
+                var html = document.documentElement;
+                var isLight = html.className.indexOf('theme-light') !== -1;
+                var newTheme = isLight ? 'dark' : 'light';
+                html.className = html.className.replace(/theme-(light|dark)/, 'theme-' + newTheme);
+                localStorage.setItem('panbbs_theme', newTheme);
+            });
+        }
 
         // 没有初始数据，或有关键词需要搜索
         if (allItems.length === 0 || currentKeyword) {

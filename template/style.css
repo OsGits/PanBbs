@@ -354,6 +354,25 @@ body {
     background: var(--accent-bg);
     border-color: var(--accent-light);
 }
+.fab-theme {
+    bottom: 140px;
+    color: var(--orange);
+    overflow: hidden;
+}
+.fab-theme svg {
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+    position: absolute;
+}
+/* 日间模式显示太阳图标 */
+html.theme-light .fab-theme .theme-icon-dark { display: none; }
+html.theme-light .fab-theme .theme-icon-light { display: block; }
+/* 夜间模式显示月亮图标 */
+html.theme-dark .fab-theme .theme-icon-light { display: none; }
+html.theme-dark .fab-theme .theme-icon-dark { display: block; }
+.fab-theme:hover svg {
+    transform: rotate(30deg) scale(1.15);
+}
+
 .fab-search {
     bottom: 88px;
 }
@@ -365,7 +384,7 @@ body {
 }
 
 .fab-copyright {
-    bottom: 140px;
+    bottom: 196px;
     color: var(--text-secondary);
 }
 .fab-copyright:hover svg {
@@ -1008,4 +1027,114 @@ body {
     text-align: center;
     font-size: 12px;
     color: var(--text-muted);
+}
+
+/* ============================================
+   暗色主题 (Dark Theme)
+   ============================================ */
+html.theme-dark {
+    --bg: #0f1119;
+    --surface: #1a1d2e;
+    --surface-hover: #252839;
+    --border: #2a2d3e;
+    --border-focus: #3a3d5c;
+    --text: #e4e6f0;
+    --text-secondary: #a0a4b8;
+    --text-muted: #6b6f85;
+    --accent: #8b7cf7;
+    --accent-light: #a99ffc;
+    --accent-bg: #1e1b3a;
+    --orange: #f5a623;
+    --orange-bg: #2a2218;
+    --blue: #5b8def;
+    --blue-bg: #151d30;
+    --green: #3dd68c;
+    --green-bg: #0e2418;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.2);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.25);
+}
+
+html.theme-dark .header {
+    background: #161923;
+}
+
+html.theme-dark .header-btn:hover {
+    background: #252839;
+}
+
+html.theme-dark .search-modal {
+    background: rgba(26, 29, 46, 0.88);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+html.theme-dark .search-modal-form input {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+}
+
+html.theme-dark .search-modal-form input::placeholder {
+    color: var(--text-muted);
+}
+
+html.theme-dark .search-modal-close,
+html.theme-dark .detail-modal-close {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-muted);
+}
+
+html.theme-dark .search-modal-close:hover,
+html.theme-dark .detail-modal-close:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text);
+}
+
+html.theme-dark .search-type-item {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+html.theme-dark .search-type-filter {
+    border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+html.theme-dark .skeleton-line {
+    background: linear-gradient(90deg, #252839 25%, #2e3148 50%, #252839 75%);
+}
+
+html.theme-dark .detail-body {
+    background: #161923;
+}
+
+html.theme-dark .detail-modal {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+html.theme-dark .global-loading-box {
+    background: rgba(26, 29, 46, 0.88);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+html.theme-dark .tag {
+    background: #252839;
+}
+
+html.theme-dark .version-card {
+    background: #161923;
+}
+
+html.theme-dark .version-connector-status {
+    background: #161923;
+}
+
+html.theme-dark .card {
+    border-color: transparent;
+}
+
+html.theme-dark .card:hover {
+    border-color: var(--border-focus);
 }

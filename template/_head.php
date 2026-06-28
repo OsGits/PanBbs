@@ -36,9 +36,10 @@ $seoConfig = require __DIR__ . '/../data/data.php';
 $seoTitle       = isset($seoConfig['seo']['title']) ? $seoConfig['seo']['title'] : '网盘资源聚合';
 $seoKeywords    = isset($seoConfig['seo']['keywords']) ? $seoConfig['seo']['keywords'] : '';
 $seoDescription = isset($seoConfig['seo']['description']) ? $seoConfig['seo']['description'] : '';
+$defaultTheme   = isset($seoConfig['default_theme']) ? $seoConfig['default_theme'] : 'light';
 ?>
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="theme-<?= $defaultTheme === 'dark' ? 'dark' : 'light' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

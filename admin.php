@@ -22,6 +22,7 @@ $apiBaseUrl    = isset($dataConfig['api_base_url']) ? $dataConfig['api_base_url'
 $searchTypes   = isset($dataConfig['search_types']) ? $dataConfig['search_types'] : 'baidu,aliyun,quark,guangya,tianyi,uc,mobile,115,pikpak,xunlei,123,magnet,ed2k';
 $cachePans     = $dataConfig['cache_pans'];
 $maxRecords    = isset($dataConfig['max_records']) ? $dataConfig['max_records'] : 100;
+$defaultTheme  = isset($dataConfig['default_theme']) ? $dataConfig['default_theme'] : 'light';
 require_once __DIR__ . '/api.php';
 require_once __DIR__ . '/version.php';
 
@@ -195,7 +196,7 @@ $page = isset($_GET['a']) ? $_GET['a'] : 'dashboard';
 
 switch ($page) {
     case 'settings':
-        adminShowSettings($currentUser, $localVersion, $seoConfig, $apiBaseUrl, $searchTypes, $cachePans, $maxRecords);
+        adminShowSettings($currentUser, $localVersion, $seoConfig, $apiBaseUrl, $searchTypes, $cachePans, $maxRecords, $defaultTheme);
         break;
 
     case 'version':
