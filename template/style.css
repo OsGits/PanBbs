@@ -154,15 +154,15 @@ body {
     position: relative;
     overflow: hidden;
 }
-/* 卡片背景图：第一张图片从上到下渐变透明 */
+/* 卡片背景图：顶部70px清晰，到header位置急剧渐变消失，不影响文字 */
 .card.has-bg-image::before {
     content: '';
     position: absolute;
     inset: 0;
     z-index: 0;
-    background: var(--card-bg-image) center/cover no-repeat;
-    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.06) 30%, rgba(0,0,0,0) 70%);
-    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.06) 30%, rgba(0,0,0,0) 70%);
+    background: var(--card-bg-image) top center / cover no-repeat;
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.40) 60%, rgba(0,0,0,0.08) 80%, rgba(0,0,0,0) 100%);
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.40) 60%, rgba(0,0,0,0.08) 80%, rgba(0,0,0,0) 100%);
     pointer-events: none;
 }
 /* 确保卡片内容在背景之上 */
@@ -170,13 +170,23 @@ body {
     position: relative;
     z-index: 1;
 }
+/* 卡片文字阴影，有背景图时增强可读性 */
+.card.has-bg-image .card-title,
+.card.has-bg-image .card-content,
+.card.has-bg-image .card-meta,
+.card.has-bg-image .card-actions {
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+.card.has-bg-image .card-icon {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
 .card:hover {
     border-color: var(--border-focus);
     box-shadow: var(--shadow-md);
 }
 .card.has-bg-image:hover::before {
-    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.08) 30%, rgba(0,0,0,0) 70%);
-    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.08) 30%, rgba(0,0,0,0) 70%);
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.48) 60%, rgba(0,0,0,0.10) 80%, rgba(0,0,0,0) 100%);
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.48) 60%, rgba(0,0,0,0.10) 80%, rgba(0,0,0,0) 100%);
 }
 .card-header {
     display: flex;
@@ -185,6 +195,13 @@ body {
     margin-bottom: 10px;
     min-width: 0;
     overflow: hidden;
+}
+/* 有背景图时，header 及以下内容向下偏移，露出上方清晰背景 */
+.card.has-bg-image {
+    padding-top: 70px;
+}
+.card.has-bg-image .card-header {
+    margin-top: 0;
 }
 .card-icon {
     flex-shrink: 0;

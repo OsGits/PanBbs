@@ -46,6 +46,9 @@
         toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 2000);
     }
 
+    // ============ 图片 CDN 前缀 ============
+    var IMG_CDN = '//apis.cnp.cc/?img=';
+
     // ============ 渲染图片区域（通用） ============
     function imagesHTML(images) {
         if (!images || !Array.isArray(images) || images.length === 0) return '';
@@ -54,7 +57,7 @@
             var src = String(images[i] || '');
             if (!src) continue;
             html += '<div class="card-image-item">' +
-                '<img src="' + escAttr(src) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.style.display=\'none\'" />' +
+                '<img src="' + escAttr(IMG_CDN + src) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.style.display=\'none\'" />' +
             '</div>';
         }
         html += '</div>';
@@ -81,14 +84,13 @@
         }
         var cardBgStyle = '';
         if (item.images && Array.isArray(item.images) && item.images.length > 0) {
-            cardBgStyle = ' style="--card-bg-image:url(' + escAttr(String(item.images[0] || '')) + ')"';
+            cardBgStyle = ' style="--card-bg-image:url(' + escAttr(IMG_CDN + String(item.images[0] || '')) + ')"';
         }
         return '<div class="card type-' + escAttr(type) + (cardBgStyle ? ' has-bg-image' : '') + '" data-idx="' + (allItems.indexOf(item)) + '"' + cardBgStyle + '>' +
             '<div class="card-header">' +
                 '<div class="card-icon type-' + escAttr(type) + '">' + icon + '</div>' +
                 '<div class="card-title">' + esc(item.title) + '</div>' +
             '</div>' +
-            imagesHTML(item.images) +
             (item.content ? '<div class="card-content">' + esc(item.content) + '</div>' : '') +
             '<div class="card-meta">' +
                 '<span class="type-badge type-' + escAttr(type) + '">' + esc(item.type) + '</span>' +
