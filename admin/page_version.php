@@ -66,26 +66,8 @@ function adminShowVersion($username, $localVersion, $remoteVersion = null, $remo
                 <div class="panel">
                     <h3>📋 最新发布更新日志</h3>
                     <?php if ($releaseBody): ?>
-                    <div class="release-body" style="font-size:14px;line-height:1.8;color:#333;">
-                        <?php
-                        // 简单的 Markdown 转 HTML（处理标题、列表、代码块、加粗等）
-                        $html = htmlspecialchars($releaseBody);
-                        // 代码块 ```...```
-                        $html = preg_replace('/```(\w*)\n?(.*?)```/s', '<pre style="background:#f5f5f5;padding:12px;border-radius:6px;overflow-x:auto;font-size:13px;"><code>$2</code></pre>', $html);
-                        // 行内代码 `...`
-                        $html = preg_replace('/`([^`]+)`/', '<code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:13px;">$1</code>', $html);
-                        // 加粗 **...**
-                        $html = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $html);
-                        // H6 ######
-                        $html = preg_replace('/^###### (.+)$/m', '<h4 style="margin:16px 0 8px;font-size:16px;">$1</h4>', $html);
-                        // H5 #####
-                        $html = preg_replace('/^##### (.+)$/m', '<h4 style="margin:14px 0 6px;font-size:17px;color:#0f3460;">$1</h4>', $html);
-                        // 无序列表 - ...
-                        $html = preg_replace('/^- (.+)$/m', '<li style="margin-left:20px;">$1</li>', $html);
-                        // 换行
-                        $html = nl2br($html);
-                        echo $html;
-                        ?>
+                    <div class="release-body readme-body">
+                        <?php echo simpleMarkdownToHtml($releaseBody); ?>
                     </div>
                     <div style="margin-top:14px;">
                         <a href="https://github.com/OsGits/PanBbs/releases" target="_blank" style="color:#4f6ef7;font-size:13px;">查看全部 Releases →</a>
