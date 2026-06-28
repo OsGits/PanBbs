@@ -69,9 +69,38 @@ if ($debug) {
 
     // 第5步：如果成功，展示展平前2条
     if (is_array($parsed) && !empty($parsed)) {
-        $steps[] = ['step' => 5, 'desc' => '前2条原始数据', 'sample' => array_slice($parsed, 0, 2)];
+        // 打印第一条原始记录的全部 key，帮助定位 images 字段位置
+        $firstItem = $parsed[0];
+        $steps[] = ['step' => 5, 'desc' => '第1条原始记录的 keys', 'keys' => array_keys($firstItem)];
+        // 如果存在 images，展示其结构
+        if (isset($firstItem['images'])) {
+            $steps[] = ['step' => '5a', 'desc' => '第1条的 images 字段', 'type' => gettype($firstItem['images']), 'value' => $firstItem['images']];
+        } else {
+            $steps[] = ['step' => '5a', 'desc' => '第1条无 images 字段，查看所有字段的类型', 'fields' => array_map(function($v) { return gettype($v); }, $firstItem)];
+        }
+        // 也检查顶层 decoded 是否直接有 images
+        if (isset($decoded['images'])) {
+            $steps[] = ['step' => '5b', 'desc' => '顶层 decoded 有 images 字段', 'type' => gettype($decoded['images'])];
+        }
+        if (isset($decoded['data']) && is_array($decoded['data']) && isset($decoded['data']['images'])) {
+            $steps[] = ['step' => '5c', 'desc' => 'data.images 字段存在', 'type' => gettype($decoded['data']['images'])];
+        }
+        $steps[] = ['step' => 6, 'desc' => '前2条原始数据(截断)', 'sample' => array_map(function($it) {
+            // 截断长字段，保留 images 字段
+            $short = [];
+            foreach ($it as $k => $v) {
+                if ($k === 'images') {
+                    $short[$k] = $v;
+                } elseif (is_string($v) && strlen($v) > 200) {
+                    $short[$k] = mb_substr($v, 0, 200) . '...';
+                } else {
+                    $short[$k] = $v;
+                }
+            }
+            return $short;
+        }, array_slice($parsed, 0, 2))];
         $flat = flattenRecord($parsed[0], $targetTypes);
-        $steps[] = ['step' => 6, 'desc' => '第1条展平结果', 'count' => count($flat), 'sample' => $flat];
+        $steps[] = ['step' => 7, 'desc' => '第1条展平结果', 'count' => count($flat), 'sample' => $flat];
     }
 
     echo json_encode($steps, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);

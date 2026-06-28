@@ -17,7 +17,7 @@
     var cardList, emptyBox, emptyMsg, loadStatus, skeletonBox, backToTop;
     var fabSearch, fabCopyright, searchOverlay, modalSearchInput, modalSearchBtn, searchModalClose, globalLoading;
     var copyrightOverlay, copyrightModalClose, localVersionEl, latestVersionEl, updateHint, connectorStatus;
-    var detailOverlay, detailModalClose, detailIcon, detailTitle, detailType, detailContent, detailMeta, detailActions;
+    var detailOverlay, detailModalClose, detailIcon, detailTitle, detailType, detailImages, detailContent, detailMeta, detailActions;
     var searchPlaceholder, searchClearBtn;
     var searchTypeCheckboxes, searchTypeToggle;
 
@@ -46,6 +46,21 @@
         toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 2000);
     }
 
+    // ============ 渲染图片区域（通用） ============
+    function imagesHTML(images) {
+        if (!images || !Array.isArray(images) || images.length === 0) return '';
+        var html = '<div class="card-images">';
+        for (var i = 0; i < images.length; i++) {
+            var src = String(images[i] || '');
+            if (!src) continue;
+            html += '<div class="card-image-item">' +
+                '<img src="' + escAttr(src) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.style.display=\'none\'" />' +
+            '</div>';
+        }
+        html += '</div>';
+        return html;
+    }
+
     // ============ 渲染单张卡片 ============
     function cardHTML(item) {
         var type = String(item.type || '');
@@ -64,11 +79,16 @@
                 '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> ' +
                 '密码：<strong>' + esc(item.password) + '</strong></span>';
         }
-        return '<div class="card type-' + escAttr(type) + '" data-idx="' + (allItems.indexOf(item)) + '">' +
+        var cardBgStyle = '';
+        if (item.images && Array.isArray(item.images) && item.images.length > 0) {
+            cardBgStyle = ' style="--card-bg-image:url(' + escAttr(String(item.images[0] || '')) + ')"';
+        }
+        return '<div class="card type-' + escAttr(type) + (cardBgStyle ? ' has-bg-image' : '') + '" data-idx="' + (allItems.indexOf(item)) + '"' + cardBgStyle + '>' +
             '<div class="card-header">' +
                 '<div class="card-icon type-' + escAttr(type) + '">' + icon + '</div>' +
                 '<div class="card-title">' + esc(item.title) + '</div>' +
             '</div>' +
+            imagesHTML(item.images) +
             (item.content ? '<div class="card-content">' + esc(item.content) + '</div>' : '') +
             '<div class="card-meta">' +
                 '<span class="type-badge type-' + escAttr(type) + '">' + esc(item.type) + '</span>' +
@@ -302,6 +322,12 @@
         if (detailType) {
             detailType.textContent = item.type || '-';
             detailType.className = 'detail-type type-' + escAttr(type);
+        }
+        // 图片（详情弹窗中的大图展示）
+        if (detailImages) {
+            var imgsHtml = imagesHTML(item.images);
+            detailImages.innerHTML = imgsHtml;
+            detailImages.style.display = imgsHtml ? '' : 'none';
         }
         // 正文
         if (detailContent) {
@@ -787,6 +813,7 @@
         detailIcon = document.getElementById('detailIcon');
         detailTitle = document.getElementById('detailTitle');
         detailType = document.getElementById('detailType');
+        detailImages = document.getElementById('detailImages');
         detailContent = document.getElementById('detailContent');
         detailMeta = document.getElementById('detailMeta');
         detailActions = document.getElementById('detailActions');

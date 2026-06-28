@@ -15,6 +15,7 @@
                 <span class="detail-type" id="detailType">-</span>
             </div>
         </div>
+        <div class="detail-images" id="detailImages"></div>
         <div class="detail-body" id="detailContent">-</div>
         <div class="detail-meta" id="detailMeta"></div>
         <div class="detail-actions" id="detailActions"></div>

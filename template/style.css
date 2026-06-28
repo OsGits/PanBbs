@@ -154,9 +154,29 @@ body {
     position: relative;
     overflow: hidden;
 }
+/* 卡片背景图：第一张图片从上到下渐变透明 */
+.card.has-bg-image::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: var(--card-bg-image) center/cover no-repeat;
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.06) 30%, rgba(0,0,0,0) 70%);
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.06) 30%, rgba(0,0,0,0) 70%);
+    pointer-events: none;
+}
+/* 确保卡片内容在背景之上 */
+.card > * {
+    position: relative;
+    z-index: 1;
+}
 .card:hover {
     border-color: var(--border-focus);
     box-shadow: var(--shadow-md);
+}
+.card.has-bg-image:hover::before {
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.08) 30%, rgba(0,0,0,0) 70%);
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.08) 30%, rgba(0,0,0,0) 70%);
 }
 .card-header {
     display: flex;
@@ -201,6 +221,29 @@ body {
     overflow: hidden;
     word-break: break-all;
     overflow-wrap: break-word;
+}
+
+/* ---- Card Images ---- */
+.card-images {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.card-image-item {
+    position: relative;
+    width: 100%;
+    padding-top: 100%;
+    overflow: hidden;
+    border-radius: var(--radius-xs);
+    background: var(--border);
+}
+.card-image-item img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 .card-meta {
     display: flex;
@@ -975,6 +1018,42 @@ html.theme-dark .fab-theme .theme-icon-dark { display: block; }
 }
 .detail-body:not(:empty) {
     display: block;
+}
+
+/* 详情图片区：单图居中，保持比例，撑满弹窗 */
+.detail-images {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+.detail-images:empty {
+    display: none;
+}
+.detail-images .card-images {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.detail-images .card-image-item {
+    position: static;
+    width: auto;
+    padding-top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-xs);
+    overflow: hidden;
+    background: var(--border);
+}
+.detail-images .card-image-item img {
+    position: static;
+    display: block;
+    max-width: 100%;
+    max-height: 70vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
 }
 
 /* 详情标签区 */

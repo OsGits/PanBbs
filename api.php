@@ -131,6 +131,19 @@ function flattenRecord($item, $targetTypes) {
     // 从远程数据中提取 datetime 字段作为 add_time
     $addTime = isset($item['datetime']) ? trim($item['datetime']) : '';
 
+    // 提取 images 字段，支持多种格式
+    $images = [];
+    if (isset($item['images']) && is_array($item['images'])) {
+        // 如果是字符串数组，直接使用
+        foreach ($item['images'] as $img) {
+            if (is_string($img) && !empty($img)) {
+                $images[] = $img;
+            } elseif (is_array($img) && isset($img['url'])) {
+                $images[] = $img['url'];
+            }
+        }
+    }
+
     if (empty($links) || !is_array($links)) {
         return $records;
     }
@@ -149,6 +162,7 @@ function flattenRecord($item, $targetTypes) {
             'content'  => $content,
             'type'     => $linkType,
             'add_time' => $addTime,
+            'images'   => $images,
         ];
     }
 
