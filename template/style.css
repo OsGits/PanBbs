@@ -871,8 +871,8 @@ html.theme-dark .fab-theme .theme-icon-dark { display: block; }
 .detail-modal {
     position: relative;
     width: 92%;
-    max-width: 480px;
-    max-height: 80vh;
+    max-width: 900px;
+    max-height: 85vh;
     overflow-y: auto;
     padding: 32px 28px 28px;
     background: var(--surface);
