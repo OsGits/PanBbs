@@ -92,6 +92,11 @@ function adminHandleActions($ossFile, $accounts) {
             adminHandleSaveCache();
             exit;
 
+        // 保存自定义代码
+        case 'save_custom_code':
+            adminHandleSaveCustomCode();
+            exit;
+
         default:
             echo json_encode(['code' => -1, 'msg' => '未知操作'], JSON_UNESCAPED_UNICODE);
             exit;
@@ -606,6 +611,63 @@ function deleteDir($dir) {
         is_dir($path) ? deleteDir($path) : unlink($path);
     }
     rmdir($dir);
+}
+
+/**
+ * 处理自定义代码保存
+ */
+function adminHandleSaveCustomCode() {
+    $customHead = isset($_POST['custom_head']) ? $_POST['custom_head'] : '';
+    $customFoot = isset($_POST['custom_foot']) ? $_POST['custom_foot'] : '';
+
+    $configFile    = __DIR__ . '/../data/data.php';
+    $configContent = @file_get_contents($configFile);
+
+    if ($configContent === false) {
+        echo json_encode(['code' => -1, 'msg' => '无法读取配置文件'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // 安全转义：防止单引号破坏 PHP 语法，保留原始内容中的其他字符
+    $safeHead = str_replace("'", "\\'", $customHead);
+    $safeFoot = str_replace("'", "\\'", $customFoot);
+
+    // 替换 $customHead = '...' 的值部分
+    $count1 = 0;
+    $configContent = preg_replace(
+        "/\\\$customHead\s*=\s*'[^']*'/",
+        "\$customHead = '{$safeHead}'",
+        $configContent,
+        -1,
+        $count1
+    );
+
+    if ($configContent === null || $count1 === 0) {
+        echo json_encode(['code' => -1, 'msg' => '自定义页头替换失败，请检查配置文件格式'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // 替换 $customFoot = '...' 的值部分
+    $count2 = 0;
+    $configContent = preg_replace(
+        "/\\\$customFoot\s*=\s*'[^']*'/",
+        "\$customFoot = '{$safeFoot}'",
+        $configContent,
+        -1,
+        $count2
+    );
+
+    if ($configContent === null || $count2 === 0) {
+        echo json_encode(['code' => -1, 'msg' => '自定义页尾替换失败，请检查配置文件格式'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $writeResult = @file_put_contents($configFile, $configContent, LOCK_EX);
+    if ($writeResult !== false) {
+        echo json_encode(['code' => 0, 'msg' => '自定义代码已保存'], JSON_UNESCAPED_UNICODE);
+    } else {
+        echo json_encode(['code' => -1, 'msg' => '文件写入失败，请检查 data/ 目录权限'], JSON_UNESCAPED_UNICODE);
+    }
 }
 
 /**

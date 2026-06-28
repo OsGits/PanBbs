@@ -19,5 +19,7 @@ var PANBBS_DATA = <?= json_encode($allList, JSON_UNESCAPED_UNICODE | JSON_UNESCA
 var PANBBS_KEYWORD = <?= json_encode($keyword) ?>;
 </script>
 <script src="<?= $basePath ?>/app.js?<?= $assetVer ?>"></script>
+<?= $seoConfig['custom_foot'] ?? '' ?>
+
 </body>
 </html>

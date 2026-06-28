@@ -47,6 +47,12 @@ $cachePans = '115,guangya,quark';
 // 每种类型最大缓存记录数
 $maxRecords = 100;
 
+// ========== 自定义代码 ==========
+// 自定义页头代码（插入前端 </head> 上方）
+$customHead = '';
+// 自定义页尾代码（插入前端 </body> 上方）
+$customFoot = '';
+
 return [
     'accounts'      => $accounts,
     'seo'           => $seo,
@@ -55,4 +61,6 @@ return [
     'cache_pans'    => $cachePans,
     'max_records'   => $maxRecords,
     'default_theme' => $defaultTheme,
+    'custom_head'   => $customHead,
+    'custom_foot'   => $customFoot,
 ];

@@ -47,5 +47,7 @@ $defaultTheme   = isset($seoConfig['default_theme']) ? $seoConfig['default_theme
     <meta name="keywords" content="<?= htmlspecialchars($seoKeywords) ?>">
     <meta name="description" content="<?= htmlspecialchars($seoDescription) ?>">
     <link rel="stylesheet" href="<?= $basePath ?>/style.css?<?= $assetVer ?>">
+    <?= $seoConfig['custom_head'] ?? '' ?>
+
 </head>
 <body>

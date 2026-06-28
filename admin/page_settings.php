@@ -19,8 +19,10 @@ if (!defined('ADMIN_ACCESS')) {
  * @param string $cachePans    缓存网盘类型，半角逗号分隔
  * @param int    $maxRecords   每种类型最大缓存记录数
  * @param string $defaultTheme 前端默认色彩 light|dark
+ * @param string $customHead   自定义页头代码
+ * @param string $customFoot   自定义页尾代码
  */
-function adminShowSettings($username, $version, $seo, $apiBaseUrl, $searchTypes, $cachePans, $maxRecords, $defaultTheme = 'light') {
+function adminShowSettings($username, $version, $seo, $apiBaseUrl, $searchTypes, $cachePans, $maxRecords, $defaultTheme = 'light', $customHead = '', $customFoot = '') {
     require_once __DIR__ . '/layout_head.php';
     require_once __DIR__ . '/layout_topbar.php';
     require_once __DIR__ . '/layout_sidebar.php';
@@ -41,6 +43,7 @@ function adminShowSettings($username, $version, $seo, $apiBaseUrl, $searchTypes,
                     <button class="tab-btn active" data-tab="tab-seo">前端 SEO 设置</button>
                     <button class="tab-btn" data-tab="tab-api">接口设置</button>
                     <button class="tab-btn" data-tab="tab-cache">缓存设置</button>
+                    <button class="tab-btn" data-tab="tab-custom-code">自定义代码</button>
                     <button class="tab-btn" data-tab="tab-password">修改密码</button>
                 </div>
 
@@ -105,6 +108,24 @@ function adminShowSettings($username, $version, $seo, $apiBaseUrl, $searchTypes,
                         <input type="number" id="maxRecords" value="<?php echo (int)$maxRecords; ?>" placeholder="100" min="1" max="99999" style="width:100%;">
                     </div>
                     <button class="btn btn-primary" onclick="saveCache()">保存缓存设置</button>
+                </div>
+
+                <!-- 自定义代码面板 -->
+                <div class="panel tab-panel" id="tab-custom-code" style="display:none;">
+                    <h3>自定义代码</h3>
+                    <p class="hint-text" style="color:#667085;font-size:13px;margin-bottom:14px;">
+                        在这里可以插入自定义 HTML / JS / CSS 代码，会分别注入到前端页面的 <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;">&lt;/head&gt;</code> 上方和 <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;">&lt;/body&gt;</code> 上方。<br>
+                        可用于添加统计代码、自定义样式、第三方脚本等。
+                    </p>
+                    <div class="form-field" style="margin-bottom:14px;">
+                        <label>📌 自定义页头（插入 &lt;/head&gt; 上方）</label>
+                        <textarea id="customHead" rows="6" style="width:100%;padding:10px 12px;border:1px solid #d0d5dd;border-radius:6px;font-size:13px;font-family:'SF Mono','Fira Code','Consolas',monospace;resize:vertical;" placeholder="<style>/* 自定义样式 */</style>"><?php echo htmlspecialchars($customHead); ?></textarea>
+                    </div>
+                    <div class="form-field" style="margin-bottom:14px;">
+                        <label>📌 自定义页尾（插入 &lt;/body&gt; 上方）</label>
+                        <textarea id="customFoot" rows="6" style="width:100%;padding:10px 12px;border:1px solid #d0d5dd;border-radius:6px;font-size:13px;font-family:'SF Mono','Fira Code','Consolas',monospace;resize:vertical;" placeholder="<script>// 第三方统计代码</script>"><?php echo htmlspecialchars($customFoot); ?></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveCustomCode()">保存自定义代码</button>
                 </div>
 
                 <!-- 修改账号密码面板 -->
@@ -251,6 +272,21 @@ function adminShowSettings($username, $version, $seo, $apiBaseUrl, $searchTypes,
                 seo_keywords: keywords,
                 seo_description: description,
                 seo_theme: theme
+            }, function(res) {
+                if (res.code === 0) {
+                    showToast(res.msg, 'success');
+                } else { showToast(res.msg, 'error'); }
+            });
+        }
+
+        // ===== 自定义代码保存 =====
+        function saveCustomCode() {
+            var customHead = document.getElementById('customHead').value;
+            var customFoot = document.getElementById('customFoot').value;
+            postAction({
+                action: 'save_custom_code',
+                custom_head: customHead,
+                custom_foot: customFoot
             }, function(res) {
                 if (res.code === 0) {
                     showToast(res.msg, 'success');

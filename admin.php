@@ -23,6 +23,8 @@ $searchTypes   = isset($dataConfig['search_types']) ? $dataConfig['search_types'
 $cachePans     = $dataConfig['cache_pans'];
 $maxRecords    = isset($dataConfig['max_records']) ? $dataConfig['max_records'] : 100;
 $defaultTheme  = isset($dataConfig['default_theme']) ? $dataConfig['default_theme'] : 'light';
+$customHead    = isset($dataConfig['custom_head']) ? $dataConfig['custom_head'] : '';
+$customFoot    = isset($dataConfig['custom_foot']) ? $dataConfig['custom_foot'] : '';
 require_once __DIR__ . '/api.php';
 require_once __DIR__ . '/version.php';
 
@@ -196,7 +198,7 @@ $page = isset($_GET['a']) ? $_GET['a'] : 'dashboard';
 
 switch ($page) {
     case 'settings':
-        adminShowSettings($currentUser, $localVersion, $seoConfig, $apiBaseUrl, $searchTypes, $cachePans, $maxRecords, $defaultTheme);
+        adminShowSettings($currentUser, $localVersion, $seoConfig, $apiBaseUrl, $searchTypes, $cachePans, $maxRecords, $defaultTheme, $customHead, $customFoot);
         break;
 
     case 'version':
