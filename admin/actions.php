@@ -251,21 +251,21 @@ function adminHandleSaveSeo() {
         exit;
     }
 
+    // 自动补全老版本可能缺失的变量和 return 键
+    $configContent = adminRepairConfig($configContent);
+
     // 安全转义：防止单引号破坏 PHP 语法
     $safeTitle       = str_replace("'", "\\'", $title);
     $safeKeywords    = str_replace("'", "\\'", $keywords);
     $safeDescription = str_replace("'", "\\'", $description);
 
     // 替换 title（匹配 $seo 数组中 'title' => '...' 的值部分）
-    $count = 0;
     $configContent = preg_replace(
         "/('title'\s*=>\s*)'[^']*'/",
         "\$1'{$safeTitle}'",
-        $configContent,
-        -1,
-        $count
+        $configContent
     );
-    if ($configContent === null || $count === 0) {
+    if ($configContent === null) {
         echo json_encode(['code' => -1, 'msg' => 'Title 替换失败，请检查配置文件格式'], JSON_UNESCAPED_UNICODE);
         exit;
     }
@@ -292,7 +292,7 @@ function adminHandleSaveSeo() {
         exit;
     }
 
-    // 替换默认色彩 default_theme
+    // 替换默认色彩 $defaultTheme
     if ($theme === 'light' || $theme === 'dark') {
         $configContent = preg_replace(
             "/\\\$defaultTheme\s*=\s*'[^']*'/",
@@ -345,34 +345,29 @@ function adminHandleSaveCache() {
         exit;
     }
 
+    // 自动补全老版本可能缺失的变量和 return 键
+    $configContent = adminRepairConfig($configContent);
+
     $safePans = str_replace("'", "\\'", $cachePans);
 
     // 替换 $cachePans = '...' 的值部分
-    $count = 0;
     $configContent = preg_replace(
         "/\\\$cachePans\s*=\s*'[^']*'/",
         "\$cachePans = '{$safePans}'",
-        $configContent,
-        -1,
-        $count
+        $configContent
     );
-
-    if ($configContent === null || $count === 0) {
+    if ($configContent === null) {
         echo json_encode(['code' => -1, 'msg' => '缓存网盘类型替换失败，请检查配置文件格式'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
     // 替换 $maxRecords = ... 的值部分
-    $count2 = 0;
     $configContent = preg_replace(
         "/\\\$maxRecords\s*=\s*\d+/",
         "\$maxRecords = {$maxRecordsInt}",
-        $configContent,
-        -1,
-        $count2
+        $configContent
     );
-
-    if ($configContent === null || $count2 === 0) {
+    if ($configContent === null) {
         echo json_encode(['code' => -1, 'msg' => '最大缓存数替换失败，请检查配置文件格式'], JSON_UNESCAPED_UNICODE);
         exit;
     }
@@ -425,35 +420,30 @@ function adminHandleSaveApi() {
         exit;
     }
 
+    // 自动补全老版本可能缺失的变量和 return 键
+    $configContent = adminRepairConfig($configContent);
+
     $safeUrl   = str_replace("'", "\\'", $apiBaseUrl);
     $safeTypes = str_replace("'", "\\'", $searchTypes);
 
     // 替换 $apiBaseUrl = '...' 的值部分
-    $count = 0;
     $configContent = preg_replace(
         "/\\\$apiBaseUrl\s*=\s*'[^']*'/",
         "\$apiBaseUrl = '{$safeUrl}'",
-        $configContent,
-        -1,
-        $count
+        $configContent
     );
-
-    if ($configContent === null || $count === 0) {
+    if ($configContent === null) {
         echo json_encode(['code' => -1, 'msg' => 'API 接口地址替换失败，请检查配置文件格式'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
     // 替换 $searchTypes = '...' 的值部分
-    $count2 = 0;
     $configContent = preg_replace(
         "/\\\$searchTypes\s*=\s*'[^']*'/",
         "\$searchTypes = '{$safeTypes}'",
-        $configContent,
-        -1,
-        $count2
+        $configContent
     );
-
-    if ($configContent === null || $count2 === 0) {
+    if ($configContent === null) {
         echo json_encode(['code' => -1, 'msg' => '网盘类型替换失败，请检查配置文件格式'], JSON_UNESCAPED_UNICODE);
         exit;
     }
@@ -614,6 +604,104 @@ function deleteDir($dir) {
 }
 
 /**
+ * 自动补全 data.php 中老版本可能缺失的变量和 return 数组键
+ *
+ * 当用户从老版本升级后，data.php 可能缺少新版本新增的配置项。
+ * 任何设置页的保存操作都会先调用此函数，确保配置文件结构完整。
+ *
+ * @param  string $content 当前配置文件内容
+ * @return string 修复后的配置文件内容
+ */
+function adminRepairConfig($content) {
+    // ========== 1. 变量定义补全 ==========
+    // 定义所有应存在的变量及其默认值和插入位置
+    $varDefs = [
+        // '变量名' => [ '完整定义行（不含缩进）', '插入锚点正则（匹配后插在它后面）' ]
+        'defaultTheme' => [
+            "// ========== 前端默认色彩 ==========\n"
+            . "// 'light' = 日间模式, 'dark' = 夜间模式\n"
+            . "\$defaultTheme = 'light';\n",
+            "/\\\$searchTypes\s*=\s*'[^']*';/",
+        ],
+        'cachePans' => [
+            "// ========== 缓存设置 ==========\n"
+            . "// 需要从远程API缓存到本地json的网盘类型，半角逗号分隔\n"
+            . "\$cachePans = '115,guangya,quark';\n"
+            . "// 每种类型最大缓存记录数\n"
+            . "\$maxRecords = 100;\n",
+            "/\\\$defaultTheme\s*=\s*'[^']*';/",
+        ],
+        'maxRecords' => [
+            "// 每种类型最大缓存记录数\n"
+            . "\$maxRecords = 100;\n",
+            "/\\\$cachePans\s*=\s*'[^']*';/",
+        ],
+        'customHead' => [
+            "// ========== 自定义代码 ==========\n"
+            . "// 自定义页头代码（插入前端 </head> 上方）\n"
+            . "\$customHead = '';\n"
+            . "// 自定义页尾代码（插入前端 </body> 上方）\n"
+            . "\$customFoot = '';\n",
+            "/\\\$maxRecords\s*=\s*\d+;/",
+        ],
+        'customFoot' => [
+            // 和 customHead 一起处理，这里不需要单独定义
+            null,
+            null,
+        ],
+    ];
+
+    foreach ($varDefs as $varName => $def) {
+        if ($def[0] === null) continue; // 跳过联带变量（如 customFoot 随 customHead 一起插入）
+        if (preg_match("/\\\${$varName}\s*=/", $content)) continue; // 已存在，跳过
+
+        // 变量不存在，在锚点后插入
+        if ($def[1] !== null && preg_match($def[1], $content, $matches, PREG_OFFSET_CAPTURE)) {
+            $pos = $matches[0][1] + strlen($matches[0][0]);
+            $content = substr_replace($content, "\n" . $def[0], $pos, 0);
+        }
+    }
+
+    // ========== 2. return 数组键补全 ==========
+    // 定义所有应存在的 return 键及其默认值和插入锚点
+    $returnKeys = [
+        // '键名' => [ '完整行', '插入锚点正则' ]
+        'default_theme' => [
+            "    'default_theme' => \$defaultTheme,",
+            "/\s*'search_types'\s*=>/",
+        ],
+        'cache_pans' => [
+            "    'cache_pans'    => \$cachePans,",
+            "/\s*'search_types'\s*=>/",
+        ],
+        'max_records' => [
+            "    'max_records'   => \$maxRecords,",
+            "/\s*'cache_pans'\s*=>/",
+        ],
+        'custom_head' => [
+            "    'custom_head'   => \$customHead,",
+            "/\s*'max_records'\s*=>/",
+        ],
+        'custom_foot' => [
+            "    'custom_foot'   => \$customFoot,",
+            "/\s*'custom_head'\s*=>/",
+        ],
+    ];
+
+    foreach ($returnKeys as $keyName => $def) {
+        if (preg_match("/'{$keyName}'\s*=>/", $content)) continue; // 已存在，跳过
+
+        // 键不存在，在锚点后插入
+        if (preg_match($def[1], $content, $matches, PREG_OFFSET_CAPTURE)) {
+            $pos = $matches[0][1] + strlen($matches[0][0]);
+            $content = substr_replace($content, "\n" . $def[0], $pos, 0);
+        }
+    }
+
+    return $content;
+}
+
+/**
  * 处理自定义代码保存
  */
 function adminHandleSaveCustomCode() {
@@ -628,36 +716,31 @@ function adminHandleSaveCustomCode() {
         exit;
     }
 
-    // 安全转义：防止单引号破坏 PHP 语法，保留原始内容中的其他字符
+    // 自动补全老版本可能缺失的变量和 return 键（包括 $customHead/$customFoot）
+    $configContent = adminRepairConfig($configContent);
+
+    // 安全转义：防止单引号破坏 PHP 语法
     $safeHead = str_replace("'", "\\'", $customHead);
     $safeFoot = str_replace("'", "\\'", $customFoot);
 
     // 替换 $customHead = '...' 的值部分
-    $count1 = 0;
     $configContent = preg_replace(
         "/\\\$customHead\s*=\s*'[^']*'/",
         "\$customHead = '{$safeHead}'",
-        $configContent,
-        -1,
-        $count1
+        $configContent
     );
-
-    if ($configContent === null || $count1 === 0) {
+    if ($configContent === null) {
         echo json_encode(['code' => -1, 'msg' => '自定义页头替换失败，请检查配置文件格式'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
     // 替换 $customFoot = '...' 的值部分
-    $count2 = 0;
     $configContent = preg_replace(
         "/\\\$customFoot\s*=\s*'[^']*'/",
         "\$customFoot = '{$safeFoot}'",
-        $configContent,
-        -1,
-        $count2
+        $configContent
     );
-
-    if ($configContent === null || $count2 === 0) {
+    if ($configContent === null) {
         echo json_encode(['code' => -1, 'msg' => '自定义页尾替换失败，请检查配置文件格式'], JSON_UNESCAPED_UNICODE);
         exit;
     }
