@@ -9,7 +9,7 @@
 <div class="global-loading-overlay" id="globalLoading">
     <div class="global-loading-box">
         <span class="global-loading-dot"></span>
-        <span class="global-loading-text">引擎重新获取中...</span>
+        <span class="global-loading-text">引擎正在获取中...</span>
     </div>
 </div>
 
