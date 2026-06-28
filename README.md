@@ -1,12 +1,15 @@
 # PanBbs - 网盘资源聚合
 
-一个轻量级的网盘资源聚合展示系统，从远程 API 拉取数据并分类展示，支持搜索、滚动加载、详情弹窗、密码一键复制等功能。
+- 一个轻量级的网盘资源聚合展示系统，从远程 API 拉取数据并分类展示，支持搜索、滚动加载、详情弹窗、密码一键复制等功能。
+- 如需下载最新版，务必前往 **[发布页面](https://github.com/OsGits/PanBbs/releases)** 下载，不要直接从 GitHub 上拉取代码。
 
-> 📦 仓库地址：[https://github.com/OsGits/PanBbs](https://github.com/OsGits/PanBbs)
+    > 📦 前端发布：[https://github.com/OsGits/PanBbs/releases](https://github.com/OsGits/PanBbs/releases)
+
+    > 🔗 后端项目：[https://github.com/fish2018/pansou](https://github.com/fish2018/pansou)
 
 ## 项目来源
 
-本项目是基于开源网盘搜索工具 [PanSo](https://github.com/fish2018/pansou) 的**扩展前端**。
+本项目是基于开源网盘搜索工具 **[PanSo]** 的**扩展前端**。
 
 - **PanSo** 提供了网盘资源搜索的后端 API 服务，负责数据抓取与检索
 - **PanBbs** 在 PanSo 的基础上，构建了一套完整的前端展示层，提供更友好的浏览、搜索、分类体验
