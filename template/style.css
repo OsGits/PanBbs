@@ -89,7 +89,7 @@ body {
 }
 
 /* ---- Container ---- */
-.container { max-width: 960px; margin: 0 auto; padding: 24px 16px 40px; }
+.container { max-width: 960px; margin: 0 auto; padding: 24px 16px 40px; position: relative; }
 
 /* ---- Toolbar ---- */
 .toolbar {
@@ -334,35 +334,53 @@ body {
 }
 
 /* ---- Floating Action Buttons ---- */
-.fab {
+.fab-group {
     position: fixed;
-    right: 24px;
-    width: 44px; height: 44px;
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
+    top: 100px;
     z-index: 200;
+    display: flex
+;
+    flex-direction: column;
+    gap: 6px;
+    right: calc(45vw - 504px);
+}
+@media (max-width: 1008px) {
+    .fab-group {
+        right: 8px;
+    }
+}
+.fab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
     background: var(--surface);
-    box-shadow: var(--shadow-md);
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s, background 0.25s, border-color 0.25s;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.25s, background 0.25s, border-color 0.25s;
     color: var(--accent);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    line-height: 1;
 }
 .fab:hover {
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-md);
     background: var(--accent-bg);
     border-color: var(--accent-light);
 }
-.fab-theme {
-    bottom: 140px;
-    color: var(--orange);
-    overflow: hidden;
+.fab svg {
+    flex-shrink: 0;
+    transition: transform 0.3s;
 }
-.fab-theme svg {
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
-    position: absolute;
+.fab-label {
+    display: inline;
+}
+.fab-theme {
+    color: var(--orange);
 }
 /* 日间模式显示太阳图标 */
 html.theme-light .fab-theme .theme-icon-dark { display: none; }
@@ -371,28 +389,18 @@ html.theme-light .fab-theme .theme-icon-light { display: block; }
 html.theme-dark .fab-theme .theme-icon-light { display: none; }
 html.theme-dark .fab-theme .theme-icon-dark { display: block; }
 .fab-theme:hover svg {
-    transform: rotate(30deg) scale(1.15);
+    transform: rotate(30deg) scale(1.1);
 }
 
-.fab-search {
-    bottom: 88px;
-}
 .fab-search:hover svg {
     transform: scale(1.1);
 }
-.fab-search svg {
-    transition: transform 0.3s;
-}
 
 .fab-copyright {
-    bottom: 196px;
     color: var(--text-secondary);
 }
 .fab-copyright:hover svg {
     transform: scale(1.1);
-}
-.fab-copyright svg {
-    transition: transform 0.3s;
 }
 
 /* ---- Copyright/Version Modal ---- */
@@ -549,36 +557,38 @@ html.theme-dark .fab-theme .theme-icon-dark { display: block; }
 
 /* ---- Back to Top ---- */
 .back-to-top {
-    position: fixed;
-    right: 24px;
-    bottom: 32px;
-    width: 44px; height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    z-index: 200;
+    box-shadow: var(--shadow-sm);
+    transition: opacity 0.3s, visibility 0.3s, box-shadow 0.25s, background 0.25s, border-color 0.25s;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    line-height: 1;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(12px);
-    transition: opacity 0.3s, visibility 0.3s, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s;
-    box-shadow: var(--shadow-md);
-    color: var(--accent);
+    transform: scale(0.9);
 }
 .back-to-top.visible {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0);
+    transform: scale(1);
 }
 .back-to-top:hover {
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-md);
     background: var(--accent-bg);
     border-color: var(--accent-light);
 }
 .back-to-top svg {
+    flex-shrink: 0;
     transition: transform 0.3s;
 }
 .back-to-top:hover svg {
@@ -1028,6 +1038,43 @@ html.theme-dark .fab-theme .theme-icon-dark { display: block; }
     text-align: center;
     font-size: 12px;
     color: var(--text-muted);
+}
+
+/* ============================================
+   移动端适配
+   ============================================ */
+@media (max-width: 1020px) {
+    .fab-group {
+        position: fixed;
+        top: auto;
+        bottom: 24px;
+        right: 16px;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .fab,
+    .back-to-top {
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border-radius: 50%;
+        justify-content: center;
+        gap: 0;
+    }
+    .back-to-top {
+        /* 移动端回到顶部始终可见 */
+        opacity: 1;
+        visibility: visible;
+        transform: scale(1);
+    }
+    .fab-label {
+        display: none;
+    }
+    .fab svg,
+    .back-to-top svg {
+        width: 20px;
+        height: 20px;
+    }
 }
 
 /* ============================================
