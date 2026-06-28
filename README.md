@@ -1,13 +1,24 @@
 # PanBbs - 网盘资源聚合
 
 - 一个轻量级的网盘资源聚合展示系统，从远程 API 拉取数据并分类展示，支持搜索、滚动加载、详情弹窗、密码一键复制等功能。
-- 如需下载最新版，务必前往 **[发布页面](https://github.com/OsGits/PanBbs/releases)** 下载，或者在 **网站后台一键更新** ，不要直接从 GitHub 上拉取代码。
+- 如需下载最新版，务必前往 **[发布页面](https://github.com/OsGits/PanBbs/releases)** 下载，或者在 **网站后台一键更新** ，不要直接从 仓库 上拉取代码。
 
     > 📦 前端发布：[https://github.com/OsGits/PanBbs/releases](https://github.com/OsGits/PanBbs/releases)
 
     > 🔗 后端项目：[https://github.com/fish2018/pansou](https://github.com/fish2018/pansou)
 
-## 项目来源
+
+## 部署PanBbs
+
+将项目放置到 PHP 支持的 Web 服务器目录下，确保：
+
+- PHP 版本 ≥ 7.0
+- 允许 `file_get_contents()` 远程访问或已安装 cURL 扩展
+- `data/` 目录可写
+
+首次访问前，先访问一次 `ting.php` 拉取初始数据，然后访问首页即可正常使用。
+
+## 项目运作
 
 本项目是基于开源网盘搜索工具 **[PanSo]** 的**扩展前端**。
 
@@ -64,24 +75,24 @@ PanBbs/
 ├── data/                      # 数据与配置
 │   ├── data.php               # 配置文件（账号密码、SEO、API地址、缓存类型、最大记录数）
 │   └── index.php              # 目录占位（oss.json 由 ting.php 自动生成）
-├── log/                       # 更新日记
+├── log/                       # 更新日志（按版本号命名）
 │   ├── V**********.md
 │   ├── V**********.md
 │   ├── V**********.md
-│   └── V**********.md
+│   └── ...
 └── template/                  # 前台模板（模块化拆分）
     ├── home.php               # 模块中枢（require 各子模块）
     ├── _head.php              # HTML头部 + 数据准备 + SEO 注入
     ├── _header.php            # 顶部导航栏
     ├── _toolbar.php           # 工具栏 + 骨架屏 + 加载指示器
-    ├── _content.php           # 卡片容器 + 空状态
-    ├── _fab.php               # 右下角浮动按钮组（搜索 / 版本信息）
+    ├── _content.php           # 卡片容器 + 空状态 + 浮动按钮组引入
+    ├── _fab.php               # 浮动按钮组（PC端右上悬浮，移动端右下圆形）
     ├── _modal_search.php      # 搜索弹窗（含网盘类型复选框筛选）
     ├── _modal_version.php     # 版本信息弹窗（本地 vs 远程对比 + 连接器状态指示）
     ├── _modal_detail.php      # 资源详情弹窗（无边框，复制源链接 + 密码复制）
-    ├── _footer.php            # 页脚 + 全局加载遮罩 + JS 注入
+    ├── _footer.php            # 页脚 + 全局加载遮罩 + JS 数据注入
     ├── app.js                 # 前端交互脚本（滚动加载、搜索、详情弹窗、版本检测等）
-    └── style.css              # 样式表（现代简约风格 + 毛玻璃效果）
+    └── style.css              # 样式表（现代简约风格 + 毛玻璃效果 + 暗色主题）
 ```
 
 ## 架构与数据流
@@ -145,12 +156,4 @@ PanBbs/
 
 8. **最大记录数** — 每种类型最多保留的记录数由 `data/data.php` 中的 `$maxRecords` 配置控制（默认 100），超出部分会被自动截断。可在后台「系统设置」→「缓存设置」中修改。
 
-## 部署
 
-将项目放置到 PHP 支持的 Web 服务器目录下，确保：
-
-- PHP 版本 ≥ 7.0
-- 允许 `file_get_contents()` 远程访问或已安装 cURL 扩展
-- `data/` 目录可写
-
-首次访问前，先访问一次 `ting.php` 拉取初始数据，然后访问首页即可正常使用。
