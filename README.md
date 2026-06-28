@@ -1,7 +1,7 @@
 # PanBbs - 网盘资源聚合
 
 - 一个轻量级的网盘资源聚合展示系统，从远程 API 拉取数据并分类展示，支持搜索、滚动加载、详情弹窗、密码一键复制等功能。
-- 如需下载最新版，务必前往 **[发布页面](https://github.com/OsGits/PanBbs/releases)** 下载，不要直接从 GitHub 上拉取代码。
+- 如需下载最新版，务必前往 **[发布页面](https://github.com/OsGits/PanBbs/releases)** 下载，或者在 **网站后台一键更新** ，不要直接从 GitHub 上拉取代码。
 
     > 📦 前端发布：[https://github.com/OsGits/PanBbs/releases](https://github.com/OsGits/PanBbs/releases)
 
